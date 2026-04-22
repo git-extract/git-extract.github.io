@@ -1,0 +1,10 @@
+{
+  "name": "git-extract-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "lint": "eslint --ext .js,.vue src/"
+  }
+}
