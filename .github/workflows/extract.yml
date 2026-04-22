@@ -1,0 +1,56 @@
+name: git-extract
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        required: true
+        description: Unique ID used to name per-run secrets (avoids concurrent collision)
+      source_repo:
+        required: true
+        description: Full HTTPS clone URL (GitHub or GitLab, any host)
+      source_path:
+        required: true
+        description: Subdirectory to extract, e.g. packages/ui
+      target_repo:
+        required: true
+        description: Full HTTPS push URL (GitHub or GitLab, any host)
+      target_branch:
+        required: true
+        default: main
+        description: Branch to force-push the filtered history onto
+      target_path:
+        required: true
+        default: src
+        description: Subdirectory in target repo to place the extracted history under
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install git-filter-repo
+        run: pip install git-filter-repo
+
+      - name: Clone source repo
+        env:
+          TOKEN: ${{ secrets[format('GE_SRC_{0}', inputs.run_id)] }}
+        run: |
+          HOST=$(echo "${{ inputs.source_repo }}" | sed 's|https://||')
+          git clone "https://oauth2:${TOKEN}@${HOST}" /tmp/source
+
+      - name: Filter history
+        run: |
+          cd /tmp/source
+          git filter-repo \
+            --subdirectory-filter "${{ inputs.source_path }}" \
+            --to-subdirectory-filter "${{ inputs.target_path }}" \
+            --force
+
+      - name: Push to target repo
+        env:
+          TOKEN: ${{ secrets[format('GE_TGT_{0}', inputs.run_id)] }}
+        run: |
+          HOST=$(echo "${{ inputs.target_repo }}" | sed 's|https://||')
+          cd /tmp/source
+          git remote set-url origin "https://oauth2:${TOKEN}@${HOST}"
+          git push origin "HEAD:${{ inputs.target_branch }}" --force
