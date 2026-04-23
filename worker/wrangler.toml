@@ -1,0 +1,13 @@
+name = "git-extract-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+SPA_URL         = "https://git-extract.pages.dev"
+GH_RUNNER_OWNER = "MekDrop"
+GH_RUNNER_REPO  = "git-extract"
+
+# Secrets (wrangler secret put):
+#   GITHUB_CLIENT_ID
+#   GITHUB_CLIENT_SECRET
+#   GH_SERVICE_PAT   ← fine-grained PAT: actions:write + secrets:write on git-extract repo only
