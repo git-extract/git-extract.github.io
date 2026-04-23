@@ -7,6 +7,7 @@ const routes = [
       { path: '/login', component: () => import('pages/LoginPage.vue') },
       { path: '/auth/github', component: () => import('pages/AuthCallback.vue') },
       { path: '/auth/gitlab', component: () => import('pages/AuthCallback.vue') },
+      { path: '/repos', component: () => import('pages/ReposPage.vue') },
     ],
   },
   {
