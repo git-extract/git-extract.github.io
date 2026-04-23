@@ -67,9 +67,15 @@
 
       <!-- Post-submit status -->
       <div v-else class="q-mt-lg">
-        <q-banner rounded class="bg-positive text-white">
+        <StatusPoller
+          v-if="runId"
+          :run-id="runId"
+          :run-url="runUrl"
+          :target-repo-url="targetRepoUrl"
+        />
+        <q-banner v-else rounded class="bg-positive text-white">
           <template #avatar><q-icon name="check_circle" /></template>
-          Extraction job submitted successfully.
+          Extraction job submitted.
         </q-banner>
       </div>
     </template>
@@ -89,6 +95,7 @@ import {
   getTree as getGlTree,
 } from '../services/gitlab.js'
 import FolderTree from '../components/FolderTree.vue'
+import StatusPoller from '../components/StatusPoller.vue'
 
 const store = useReposStore()
 const auth = useAuthStore()
@@ -101,10 +108,18 @@ const targetBranches = ref([])
 const treeLoading = ref(false)
 const submitting = ref(false)
 const submitted = ref(false)
+const runId = ref('')
+const runUrl = ref('')
 
 const canSubmit = computed(
   () => !!store.sourcePath && !!store.selectedTarget && !!targetBranch.value,
 )
+
+const targetRepoUrl = computed(() => {
+  if (!store.selectedTarget) return ''
+  const base = auth.provider === 'github' ? 'https://github.com' : `https://${auth.gitlabHost}`
+  return `${base}/${store.selectedTarget.fullName}`
+})
 
 onMounted(async () => {
   if (!source.value) return
@@ -166,7 +181,7 @@ async function submit() {
   const ghBase = 'https://github.com'
   const glBase = `https://${auth.gitlabHost}`
   const base = auth.provider === 'github' ? ghBase : glBase
-  await fetch(`${process.env.WORKER_URL}/extract`, {
+  const res = await fetch(`${process.env.WORKER_URL}/extract`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -179,6 +194,9 @@ async function submit() {
       targetPath: store.targetPath,
     }),
   })
+  const data = await res.json()
+  runId.value = data.runId || ''
+  runUrl.value = data.runUrl || ''
   submitting.value = false
   submitted.value = true
 }
