@@ -11,6 +11,7 @@
     "lint": "npm -w frontend run lint"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=24",
+    "npm": ">=11.9"
   }
 }
