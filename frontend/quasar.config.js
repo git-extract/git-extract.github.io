@@ -9,16 +9,16 @@ module.exports = configure(function (/* ctx */) {
       errors: true,
     },
 
-    boot: [],
+    boot: ['pinia'],
 
     css: ['app.scss'],
 
-    extras: ['roboto-font', 'material-icons'],
+    extras: ['roboto-font', 'material-icons', 'fontawesome-v6'],
 
     build: {
       target: {
         browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
-        node: 'node20',
+        node: 'node24',
       },
 
       vueRouterMode: 'hash',
