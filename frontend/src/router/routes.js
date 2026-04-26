@@ -1,7 +1,7 @@
 const routes = [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/WizardLayout.vue'),
     children: [
       { path: '', redirect: '/repos' },
       { path: '/login', component: () => import('pages/LoginPage.vue') },
