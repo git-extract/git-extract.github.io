@@ -60,17 +60,22 @@
 
         <div class="w98-footer__nav">
           <button
-            v-if="nav.onBack"
             class="w98-btn"
-            @click="nav.onBack"
+            :disabled="!nav.onBack || nav.backDisabled"
+            @click="nav.onBack && nav.onBack()"
           >{{ nav.backLabel }}</button>
 
           <button
-            v-if="nav.onNext"
-            class="w98-btn w98-btn--primary"
-            :disabled="nav.nextDisabled"
-            @click="nav.onNext"
+            class="w98-btn"
+            :disabled="!nav.onNext || nav.nextDisabled"
+            @click="nav.onNext && nav.onNext()"
           >{{ nav.nextLabel }}</button>
+
+          <button
+            class="w98-btn w98-btn--primary"
+            :disabled="!nav.onFinish || nav.finishDisabled"
+            @click="nav.onFinish && nav.onFinish()"
+          >{{ nav.finishLabel }}</button>
 
           <div class="w98-btn-sep" />
 

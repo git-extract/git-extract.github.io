@@ -56,10 +56,14 @@ const gitlabHost = ref('gitlab.com')
 onMounted(() => {
   nav.value = {
     backLabel: '< Back',
+    backDisabled: false,
+    onBack: () => router.push('/welcome'),
     nextLabel: 'Next >',
     nextDisabled: true,     // user advances by clicking a provider
-    onBack: () => router.push('/welcome'),
     onNext: null,
+    finishLabel: 'Finish',
+    finishDisabled: true,
+    onFinish: null,
   }
 })
 

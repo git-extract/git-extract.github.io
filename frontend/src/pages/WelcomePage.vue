@@ -79,10 +79,14 @@ const nav    = useWizardNav()
 onMounted(() => {
   nav.value = {
     backLabel: '< Back',
+    backDisabled: true,
+    onBack: null,
     nextLabel: 'Next >',
     nextDisabled: false,
-    onBack: null, // first step — no back
     onNext: () => router.push(auth.isLoggedIn ? '/repos' : '/login'),
+    finishLabel: 'Finish',
+    finishDisabled: true,
+    onFinish: null,
   }
 })
 </script>

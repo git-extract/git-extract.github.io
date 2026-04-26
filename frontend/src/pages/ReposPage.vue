@@ -101,12 +101,14 @@ function updateNav() {
   const repo = store.list.find((r) => r.id === selected.value) || null
   nav.value = {
     backLabel: '< Back',
+    backDisabled: false,
+    onBack: () => router.push('/login'),
     nextLabel: 'Next >',
     nextDisabled: !selected.value,
-    onBack: () => router.push('/login'),
-    onNext: selected.value
-      ? () => confirm(repo)
-      : null,
+    onNext: selected.value ? () => confirm(repo) : null,
+    finishLabel: 'Finish',
+    finishDisabled: true,
+    onFinish: null,
   }
 }
 

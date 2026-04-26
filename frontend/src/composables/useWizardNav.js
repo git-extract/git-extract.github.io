@@ -7,19 +7,29 @@ const KEY = Symbol('wizardNav')
  */
 export function provideWizardNav() {
   const nav = ref({
+    // ← Back
     backLabel: '< Back',
+    backDisabled: false,
+    onBack: null,         // null  = disabled
+
+    // Next →
     nextLabel: 'Next >',
     nextDisabled: false,
-    onBack: null, // null = hidden
-    onNext: null, // null = hidden
+    onNext: null,         // null  = disabled
+
+    // Finish (final action — Extract & Push, Done, etc.)
+    finishLabel: 'Finish',
+    finishDisabled: false,
+    onFinish: null,       // null  = disabled
   })
   provide(KEY, nav)
   return nav
 }
 
 /**
- * Called in each page component to register its Back / Next handlers.
- * Pass null for onBack / onNext to hide that button.
+ * Called in each page component to register its nav handlers.
+ * Any field omitted keeps its previous value; pass null for a
+ * handler to disable that button.
  */
 export function useWizardNav() {
   return inject(KEY)

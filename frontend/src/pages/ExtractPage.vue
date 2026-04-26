@@ -168,24 +168,30 @@ watch([canSubmit, submitted, source], updateNav)
 function updateNav() {
   if (!source.value) {
     nav.value = {
-      backLabel: '< Back', nextLabel: 'Next >', nextDisabled: true,
-      onBack: () => router.push('/repos'), onNext: null,
+      backLabel: '< Back', backDisabled: false,
+      onBack: () => router.push('/repos'),
+      nextLabel: 'Next >', nextDisabled: true, onNext: null,
+      finishLabel: 'Finish', finishDisabled: true, onFinish: null,
     }
     return
   }
   if (submitted.value) {
     nav.value = {
-      backLabel: '← Start over', nextLabel: 'Finish', nextDisabled: false,
-      onBack: () => reset(), onNext: () => router.push('/repos'),
+      backLabel: '← Start over', backDisabled: false,
+      onBack: () => reset(),
+      nextLabel: 'Next >', nextDisabled: true, onNext: null,
+      finishLabel: 'Done', finishDisabled: false,
+      onFinish: () => router.push('/repos'),
     }
     return
   }
   nav.value = {
-    backLabel: '< Back',
-    nextLabel: submitting.value ? 'Extracting…' : 'Extract && Push',
-    nextDisabled: !canSubmit.value || submitting.value,
+    backLabel: '< Back', backDisabled: false,
     onBack: () => router.push('/repos'),
-    onNext: () => submit(),
+    nextLabel: 'Next >', nextDisabled: true, onNext: null,
+    finishLabel: submitting.value ? 'Extracting…' : 'Extract && Push',
+    finishDisabled: !canSubmit.value || submitting.value,
+    onFinish: canSubmit.value && !submitting.value ? () => submit() : null,
   }
 }
 
