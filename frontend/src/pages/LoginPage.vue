@@ -9,6 +9,43 @@
     </div>
 
     <div class="wiz-page__body">
+      <!-- Tool description -->
+      <div class="tool-intro q-mb-xl">
+        <div class="tool-intro__headline">What is git-extract?</div>
+        <p class="tool-intro__text">
+          <strong>git-extract</strong> splits a subdirectory out of any Git repository into a
+          brand-new repository — keeping the <em>complete commit history</em> for that path.
+          No manual rebasing, no lost commits.
+        </p>
+        <div class="tool-intro__steps">
+          <div class="tool-intro__step">
+            <div class="tool-intro__step-num">1</div>
+            <div>
+              <div class="tool-intro__step-title">Sign in</div>
+              <div class="tool-intro__step-desc">Connect your GitHub or GitLab account.</div>
+            </div>
+          </div>
+          <div class="tool-intro__step">
+            <div class="tool-intro__step-num">2</div>
+            <div>
+              <div class="tool-intro__step-title">Select a source repository</div>
+              <div class="tool-intro__step-desc">Pick the repo that contains the path you want to extract.</div>
+            </div>
+          </div>
+          <div class="tool-intro__step">
+            <div class="tool-intro__step-num">3</div>
+            <div>
+              <div class="tool-intro__step-title">Configure &amp; extract</div>
+              <div class="tool-intro__step-desc">
+                Choose the source folder, the target repository and branch, then click
+                <strong>Extract &amp; Push</strong>. A GitHub Actions job rewrites history and
+                pushes the result.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <q-banner v-if="errorMessage" rounded class="bg-negative text-white q-mb-lg">
         {{ errorMessage }}
       </q-banner>
@@ -84,6 +121,71 @@ async function loginGitlab() {
 </script>
 
 <style lang="scss" scoped>
+.tool-intro {
+  max-width: 560px;
+  padding: 20px 24px;
+  border: 1px solid #d8d8d8;
+  border-left: 4px solid $secondary;
+  border-radius: 3px;
+  background: #f8fdf9;
+
+  &__headline {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: $primary;
+    margin-bottom: 8px;
+  }
+
+  &__text {
+    font-size: 13px;
+    color: #444;
+    margin: 0 0 16px;
+    line-height: 1.6;
+  }
+
+  &__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__step-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: $secondary;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+
+  &__step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: $primary;
+  }
+
+  &__step-desc {
+    font-size: 12px;
+    color: #666;
+    margin-top: 1px;
+    line-height: 1.5;
+  }
+}
+
 .login-providers {
   max-width: 460px;
 }
