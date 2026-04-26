@@ -28,8 +28,8 @@
         <span class="w98-titlebar__text">{{ title }}</span>
 
         <div class="w98-titlebar__controls" @mousedown.stop>
-          <button class="w98-chrome-btn" title="Minimize" disabled>_</button>
-          <button class="w98-chrome-btn" title="Maximize" :disabled="!maximizable">□</button>
+          <button class="w98-chrome-btn w98-chrome-btn--minimize" title="Minimize" disabled></button>
+          <button class="w98-chrome-btn w98-chrome-btn--maximize" title="Maximize" :disabled="!maximizable"></button>
           <button class="w98-chrome-btn w98-chrome-btn--close" title="Close" @click.stop="openCloseDialog">✕</button>
         </div>
       </div>
@@ -256,8 +256,6 @@ function confirmClose() {
   width: 16px;
   height: 14px;
   background: #F2F2F2;
-  font-size: 9px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,32 +263,70 @@ function confirmClose() {
   color: #000;
   border: none;
   padding: 0;
+  position: relative;   // anchor for ::before pseudo-element shapes
+  flex-shrink: 0;
   box-shadow:
     inset -1px -1px #0a0a0a,
     inset  1px  1px #ffffff,
     inset -2px -2px #808080,
     inset  2px  2px #e8e8e8;
 
-  &:active {
+  &:active:not(:disabled) {
     box-shadow:
       inset -1px -1px #ffffff,
       inset  1px  1px #0a0a0a,
       inset -2px -2px #e8e8e8,
       inset  2px  2px #808080;
-    padding: 1px 0 0 1px;
+    // shift icon 1px to give "pressed" feel
+    &::before { transform: translate(-50%, -50%) translate(1px, 1px); }
   }
 
   &:disabled {
-    opacity: 1;              // cancel browser's built-in opacity dimming
-    color: #808080;          // grey text
-    text-shadow: 1px 1px 0 #fff; // white emboss offset — classic Win98 look
-    cursor: default;         // no "not-allowed" cursor
-    // raised 3D border stays exactly the same — Win98 never flattens it
-    &:active { box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #e8e8e8; padding: 0; }
+    opacity: 1;       // cancel browser opacity dimming
+    cursor: default;
+    // icon shape turns grey + gets a white emboss shadow via filter
+    &::before {
+      background: #808080;
+      border-color: #808080;
+      filter: drop-shadow(1px 1px 0 #fff);
+    }
+    &:active { box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #e8e8e8; }
+    &:active::before { transform: translate(-50%, -50%); } // no press shift when disabled
   }
 
+  // ── Minimize icon: horizontal bar near bottom ─────────────────
+  &--minimize::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, 2px); // nudge toward bottom
+    width: 8px;
+    height: 2px;
+    background: currentColor;
+  }
+
+  // ── Maximize icon: rectangle with thick top (Win98 style) ─────
+  &--maximize::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 7px;
+    background: transparent;
+    border: 1px solid currentColor;
+    border-top-width: 2px;  // thick top = title bar of a window
+  }
+
+  // ── Close button ──────────────────────────────────────────────
   &--close {
     margin-left: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+
     &:hover:not(:disabled) { background: #e04040; color: #fff; }
   }
 }
