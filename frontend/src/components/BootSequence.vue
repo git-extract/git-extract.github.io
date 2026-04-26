@@ -15,17 +15,8 @@
         :style="{ '--d': item.delay + 'ms' }"
       >{{ item.text }}</div>
 
-      <!-- Top-right logo — pure box-drawing chars, no CSS borders -->
-      <div class="bios-logo">
-        <div class="bios-logo__line">╔══════════════╗</div>
-        <div class="bios-logo__line bios-logo__line--brand">║  * FENIX  *  ║</div>
-        <div class="bios-logo__line bios-logo__line--product">║  RewardBIOS  ║</div>
-        <div class="bios-logo__line bios-logo__line--dim">║   v6.00PG    ║</div>
-        <div class="bios-logo__line">╠══════════════╣</div>
-        <div class="bios-logo__line bios-logo__line--dim">║  git-extract ║</div>
-        <div class="bios-logo__line bios-logo__line--dim">║ Systems, Inc.║</div>
-        <div class="bios-logo__line">╚══════════════╝</div>
-      </div>
+      <!-- Top-right logo — pixel-art canvas, 80×50 px drawn natively, scaled 3× -->
+      <canvas ref="biosLogoCanvas" class="bios-logo" />
     </div>
 
     <!-- CD boot -->
@@ -54,14 +45,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import BlueScreen from './BlueScreen.vue'
 
 const emit = defineEmits(['done'])
 
 // ── State ──────────────────────────────────────────────────────
-const phase         = ref('bsod')
-const bsodCountdown = ref(3)
+const phase          = ref('bsod')
+const bsodCountdown  = ref(3)
+const biosLogoCanvas = ref(null)
 
 // ── Boot content ───────────────────────────────────────────────
 const BIOS_CONTENT = [
@@ -101,6 +93,103 @@ const WIN98_CONTENT = [
   { text: '',                                     delay: 200 },
   { text: '         Starting Winders 98...', delay: 400 },
 ]
+
+// ── BIOS logo (pixel art) ─────────────────────────────────────
+watch(phase, val => { if (val === 'bios') nextTick(() => drawBiosLogo()) })
+
+function drawBiosLogo() {
+  const canvas = biosLogoCanvas.value
+  if (!canvas) return
+
+  const W = 80, H = 50
+  canvas.width  = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d')
+
+  // Dithered dark-blue background (2-colour checkerboard)
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      ctx.fillStyle = (x + y) % 2 === 0 ? '#00007B' : '#000055'
+      ctx.fillRect(x, y, 1, 1)
+    }
+  }
+
+  // 1-px border
+  ctx.fillStyle = '#4444AA'
+  ctx.fillRect(0, 0, W, 1);      ctx.fillRect(0, H - 1, W, 1)
+  ctx.fillRect(0, 0, 1, H);      ctx.fillRect(W - 1, 0, 1, H)
+
+  // ── Big pixel font (5×5) — "FENIX" ────────────────────────────
+  const BIG = {
+    F: [[1,1,1,1,1],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0]],
+    E: [[1,1,1,1,1],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,1,1,1,1]],
+    N: [[1,0,0,0,1],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[1,0,0,0,1]],
+    I: [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1]],
+    X: [[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,1,0,1,0],[1,0,0,0,1]],
+  }
+  const ps = 2           // on-canvas px per font pixel
+  const bigStr = 'FENIX'
+  const bigW = bigStr.length * 5 * ps + (bigStr.length - 1) * 2
+  const bigX = Math.floor((W - bigW) / 2)
+  const bigY = 6
+
+  ctx.fillStyle = '#FFFF55'
+  bigStr.split('').forEach((ch, ci) => {
+    const ox = bigX + ci * (5 * ps + 2)
+    BIG[ch].forEach((row, ry) =>
+      row.forEach((bit, rx) => { if (bit) ctx.fillRect(ox + rx * ps, bigY + ry * ps, ps, ps) })
+    )
+  })
+
+  // Horizontal separator
+  ctx.fillStyle = '#5555CC'
+  ctx.fillRect(3, 22, W - 6, 1)
+
+  // ── Small variable-width pixel font (4-5 × 5) ─────────────────
+  const SM = {
+    A: [[0,1,1,0],[1,0,0,1],[1,1,1,1],[1,0,0,1],[1,0,0,1]],
+    B: [[1,1,1,0],[1,0,0,1],[1,1,1,0],[1,0,0,1],[1,1,1,0]],
+    C: [[0,1,1,0],[1,0,0,0],[1,0,0,0],[1,0,0,0],[0,1,1,0]],
+    D: [[1,1,1,0],[1,0,0,1],[1,0,0,1],[1,0,0,1],[1,1,1,0]],
+    E: [[1,1,1,1],[1,0,0,0],[1,1,1,0],[1,0,0,0],[1,1,1,1]],
+    G: [[0,1,1,1],[1,0,0,0],[1,0,1,1],[1,0,0,1],[0,1,1,1]],
+    I: [[1,1,1],[0,1,0],[0,1,0],[0,1,0],[1,1,1]],
+    O: [[0,1,1,0],[1,0,0,1],[1,0,0,1],[1,0,0,1],[0,1,1,0]],
+    P: [[1,1,1,0],[1,0,0,1],[1,1,1,0],[1,0,0,0],[1,0,0,0]],
+    R: [[1,1,1,0],[1,0,0,1],[1,1,1,0],[1,0,1,0],[1,0,0,1]],
+    S: [[0,1,1,1],[1,0,0,0],[0,1,1,0],[0,0,0,1],[1,1,1,0]],
+    T: [[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0]],
+    V: [[1,0,0,0,1],[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,0,0,0,0]],
+    W: [[1,0,0,0,1],[1,0,0,0,1],[1,0,1,0,1],[1,1,0,1,1],[1,0,0,0,1]],
+    X: [[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,1,0,1,0],[1,0,0,0,1]],
+    '0': [[0,1,1,0],[1,0,0,1],[1,0,0,1],[1,0,0,1],[0,1,1,0]],
+    '6': [[0,1,1,0],[1,0,0,0],[1,1,1,0],[1,0,0,1],[0,1,1,0]],
+    '.': [[0],[0],[0],[0],[1]],
+    '-': [[0,0,0],[0,0,0],[1,1,1],[0,0,0],[0,0,0]],
+    ' ': [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]],
+  }
+
+  function smWidth(str) {
+    let w = 0
+    for (const ch of str) { const b = SM[ch] ?? SM[' ']; w += b[0].length + 1 }
+    return w - 1
+  }
+  function drawSmText(str, y, color) {
+    ctx.fillStyle = color
+    let cx = Math.floor((W - smWidth(str)) / 2)
+    for (const ch of str) {
+      const bmp = SM[ch] ?? SM[' ']
+      bmp.forEach((row, ry) =>
+        row.forEach((bit, rx) => { if (bit) ctx.fillRect(cx + rx, y + ry, 1, 1) })
+      )
+      cx += bmp[0].length + 1
+    }
+  }
+
+  drawSmText('REWARDBIOS', 26, '#FFFFFF')
+  drawSmText('V6.00PG',    35, '#AAAAAA')
+  drawSmText('GIT-EXTRACT', 43, '#666699')
+}
 
 // ── Sequence ───────────────────────────────────────────────────
 function go(p, ms) { setTimeout(() => { phase.value = p }, ms) }
@@ -173,24 +262,16 @@ onMounted(() => {
 }
 
 // ── BIOS logo (top-right corner) ───────────────────────────────
-// Pure monospace box-drawing characters — no CSS borders or backgrounds.
-// Each div is one line; colours mimic real Award/Phoenix BIOS text.
+// 80×50 canvas drawn at native resolution, scaled to 240×150 via CSS.
+// image-rendering: pixelated keeps each logical pixel a hard block — no blur.
 .bios-logo {
   position: absolute;
   top: 18px;
   right: 36px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  line-height: 1.55;
-
-  &__line {
-    white-space: pre;
-    color: #aaaaaa;           // box-drawing chars: same grey as POST text
-
-    &--brand   { color: #ffff55; } // bright yellow — product name highlight
-    &--product { color: #ffffff; } // white
-    &--dim     { color: #777777; } // darker grey for version / company
-  }
+  width:  240px;
+  height: 150px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges; // Firefox
 }
 
 // ── CD boot ────────────────────────────────────────────────────

@@ -103,15 +103,21 @@ const steps = [
   { id: 1, label: 'Welcome' },
   { id: 2, label: 'Sign In' },
   { id: 3, label: 'Select Repository' },
-  { id: 4, label: 'Configure & Extract' },
+  { id: 4, label: 'Select Paths' },
+  { id: 5, label: 'Output Options' },
+  { id: 6, label: 'Progress' },
+  { id: 7, label: 'Finish' },
 ]
 
 const currentStep = computed(() => {
   const p = route.path
-  if (p === '/' || p === '/welcome')           return 1
-  if (p === '/login' || p.startsWith('/auth')) return 2
-  if (p === '/repos')                          return 3
-  if (p === '/extract')                        return 4
+  if (p === '/' || p === '/welcome')              return 1
+  if (p === '/login' || p.startsWith('/auth'))    return 2
+  if (p === '/repos')                             return 3
+  if (p === '/extract/paths')                     return 4
+  if (p === '/extract/options')                   return 5
+  if (p === '/extract/progress')                  return 6
+  if (p === '/extract/finish')                    return 7
   return 1
 })
 
