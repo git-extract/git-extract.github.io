@@ -72,7 +72,7 @@
           >{{ nav.nextLabel }}</button>
 
           <button
-            class="w98-btn w98-btn--primary"
+            class="w98-btn w98-btn--default"
             :disabled="!nav.onFinish || nav.finishDisabled"
             @click="nav.onFinish && nav.onFinish()"
           >{{ nav.finishLabel }}</button>

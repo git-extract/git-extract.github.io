@@ -406,29 +406,18 @@ function confirmClose() {
     text-shadow: 1px 1px #fff;
   }
 
-  &--primary {
-    background: $secondary;
-    color: #fff;
+  // Win98 "default" button — same grey but with a black focus border
+  // to indicate it's the recommended action (no green)
+  &--default {
+    outline: 2px solid #000;
+    outline-offset: -4px;
     font-weight: 700;
-    box-shadow:
-      inset -1px -1px #000,
-      inset  1px  1px #6BBF89,
-      inset -2px -2px #0d5a28,
-      inset  2px  2px #2db85a;
-
-    &:active:not(:disabled) {
-      box-shadow:
-        inset -1px -1px #6BBF89,
-        inset  1px  1px #000,
-        inset -2px -2px #2db85a,
-        inset  2px  2px #0d5a28;
-      padding: 1px 9px 0 11px;
-    }
 
     &:disabled {
-      background: #A7D9B8;
-      color: #6BBF89;
-      text-shadow: none;
+      outline-color: #808080;
+      color: #808080;
+      cursor: default;
+      text-shadow: 1px 1px #fff;
     }
   }
 }
