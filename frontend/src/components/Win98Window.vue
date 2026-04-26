@@ -76,27 +76,43 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 // ── State ───────────────────────────────────────────────────────
-const pos            = ref({ x: 0, y: 0 })
-const dragging       = ref(false)
-const dragOffset     = ref({ x: 0, y: 0 })
-const maximized      = ref(false)
-const minimized      = ref(false)
+const pos              = ref({ x: 0, y: 0 })
+const dragging         = ref(false)
+const dragOffset       = ref({ x: 0, y: 0 })
+const maximized        = ref(false)
+const minimized        = ref(false)
 const showCloseConfirm = ref(false)
+const vw               = ref(window.innerWidth)
+const vh               = ref(window.innerHeight)
+
+// Effective dimensions — shrink to fit the viewport if needed
+const winW = computed(() => Math.min(props.width,  vw.value))
+const winH = computed(() => Math.min(props.height, vh.value))
+
+// ── Helpers ─────────────────────────────────────────────────────
+function clampPos(x, y) {
+  return {
+    x: Math.max(0, Math.min(x, vw.value - winW.value)),
+    y: Math.max(0, Math.min(y, vh.value - winH.value)),
+  }
+}
 
 // ── Lifecycle ───────────────────────────────────────────────────
 onMounted(() => {
   // Centre window on load
-  pos.value = {
-    x: Math.max(0, Math.round((window.innerWidth  - props.width)  / 2)),
-    y: Math.max(0, Math.round((window.innerHeight - props.height) / 2)),
-  }
+  pos.value = clampPos(
+    Math.round((vw.value - winW.value) / 2),
+    Math.round((vh.value - winH.value) / 2),
+  )
   document.addEventListener('mousemove', onMouseMove)
   document.addEventListener('mouseup',   onMouseUp)
+  window.addEventListener('resize', onViewportResize)
 })
 
 onUnmounted(() => {
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('mouseup',   onMouseUp)
+  window.removeEventListener('resize', onViewportResize)
 })
 
 // ── Computed style ──────────────────────────────────────────────
@@ -106,8 +122,8 @@ const windowStyle = computed(() => {
     position: 'absolute',
     left:   pos.value.x + 'px',
     top:    pos.value.y + 'px',
-    width:  props.width  + 'px',
-    height: props.height + 'px',
+    width:  winW.value  + 'px',
+    height: winH.value  + 'px',
   }
 })
 
@@ -121,10 +137,18 @@ function onTitlebarMouseDown(e) {
 
 function onMouseMove(e) {
   if (!dragging.value) return
-  pos.value = {
-    x: Math.max(0, Math.min(e.clientX - dragOffset.value.x, window.innerWidth  - props.width)),
-    y: Math.max(0, Math.min(e.clientY - dragOffset.value.y, window.innerHeight - props.height)),
-  }
+  pos.value = clampPos(
+    e.clientX - dragOffset.value.x,
+    e.clientY - dragOffset.value.y,
+  )
+}
+
+// ── Viewport resize ─────────────────────────────────────────────
+function onViewportResize() {
+  vw.value = window.innerWidth
+  vh.value = window.innerHeight
+  // Re-clamp so the window never sits outside the new viewport
+  pos.value = clampPos(pos.value.x, pos.value.y)
 }
 
 function onMouseUp() {
