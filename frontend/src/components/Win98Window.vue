@@ -213,12 +213,12 @@ function openCloseDialog() {
 
 // ── Boot sequence content ───────────────────────────────────────
 const BIOS_CONTENT = [
-  { text: 'Phoenix - AwardBIOS v6.00PG, An Energy Star Ally',          delay: 0 },
-  { text: 'Copyright (C) 1984-2001, Phoenix Technologies, LTD',        delay: 60 },
+  { text: 'Fenix - RewardBIOS v6.00PG, An Energy Star Companion',      delay: 0 },
+  { text: 'Copyright (C) 1984-2001, Fenix Technologies, LTD',          delay: 60 },
   { text: '',                                                            delay: 150 },
   { text: 'git-extract Systems, Inc.',                                  delay: 220 },
   { text: '',                                                            delay: 310 },
-  { text: 'Main Processor  : Intel Pentium III 450MHz',                 delay: 380 },
+  { text: 'Main Processor  : Intek Pentagram III 450MHz',               delay: 380 },
   { text: 'Math Coprocessor: Installed',                                delay: 450 },
   { text: 'Floppy Drive A  : 1.44MB  3.5"',                            delay: 520 },
   { text: '',                                                            delay: 600 },
@@ -226,9 +226,9 @@ const BIOS_CONTENT = [
   { text: 'Memory Test :     131072K',                                  delay: 950 },
   { text: 'Memory Test :     524288K  OK',                              delay: 1150 },
   { text: '',                                                            delay: 1350 },
-  { text: 'Detecting Primary Master   ...  ST320423A      Ultra DMA Mode 5', delay: 1550 },
+  { text: 'Detecting Primary Master   ...  XS320423A      Ultra DXA Mode 5', delay: 1550 },
   { text: 'Detecting Primary Slave    ...  None',                       delay: 1830 },
-  { text: 'Detecting Secondary Master ...  ASUS CD-524E   PIO Mode 4', delay: 2110 },
+  { text: 'Detecting Secondary Master ...  AZUS CD-524E   PIO Mode 4', delay: 2110 },
   { text: 'Detecting Secondary Slave  ...  None',                       delay: 2390 },
   { text: '',                                                            delay: 2600 },
   { text: 'Press <DEL> to enter SETUP   Press <F12> for Boot Menu',    delay: 2800 },
@@ -237,7 +237,7 @@ const BIOS_CONTENT = [
 ]
 
 const CDBOOT_CONTENT = [
-  { text: 'ATAPI CD-ROM: ASUS CD-524E',         delay: 0 },
+  { text: 'ATAPI CD-ROM: AZUS CD-524E',         delay: 0 },
   { text: '',                                    delay: 300 },
   { text: 'Loading boot sector...',              delay: 500 },
   { text: '',                                    delay: 850 },
@@ -245,9 +245,9 @@ const CDBOOT_CONTENT = [
 ]
 
 const WIN98_CONTENT = [
-  { text: 'Microsoft Windows 98',              delay: 0 },
-  { text: '',                                  delay: 200 },
-  { text: '         Starting Windows 98...', delay: 400 },
+  { text: 'Microtough Winders 98',                delay: 0 },
+  { text: '',                                     delay: 200 },
+  { text: '         Starting Winders 98...', delay: 400 },
 ]
 
 // ── Boot sequence logic ─────────────────────────────────────────
