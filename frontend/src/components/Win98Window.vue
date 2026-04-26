@@ -24,7 +24,21 @@
         @mousedown="onTitlebarMouseDown"
         @dblclick="toggleMaximize"
       >
-        <span class="w98-titlebar__icon">⎇</span>
+        <span class="w98-titlebar__icon" @click.stop="toggleSysMenu" @dblclick.stop="openCloseDialog">⎇</span>
+
+        <!-- System menu dropdown -->
+        <div v-if="showSysMenu" class="w98-sysmenu" @mousedown.stop>
+          <div class="w98-sysmenu__item w98-sysmenu__item--disabled">
+            <span class="w98-sysmenu__icon">_</span> Minimize
+          </div>
+          <div class="w98-sysmenu__item w98-sysmenu__item--disabled">
+            <span class="w98-sysmenu__icon">□</span> Maximize
+          </div>
+          <div class="w98-sysmenu__sep" />
+          <div class="w98-sysmenu__item" @click="closeSysMenu(); openCloseDialog()">
+            <span class="w98-sysmenu__icon">✕</span> Close        <span class="w98-sysmenu__hotkey">Alt+F4</span>
+          </div>
+        </div>
         <span class="w98-titlebar__text">{{ title }}</span>
 
         <div class="w98-titlebar__controls" @mousedown.stop>
@@ -122,6 +136,7 @@ const dragOffset       = ref({ x: 0, y: 0 })
 const maximized        = ref(false)
 const minimized        = ref(false)
 const showCloseConfirm = ref(false)
+const showSysMenu      = ref(false)
 const bootPhase        = ref(null)   // null|'bsod'|'black'|'bios'|'cdboot'|'win98'
 const bsodCountdown    = ref(3)
 const vw               = ref(window.innerWidth)
@@ -148,12 +163,14 @@ onMounted(() => {
   )
   document.addEventListener('mousemove', onMouseMove)
   document.addEventListener('mouseup',   onMouseUp)
+  document.addEventListener('mousedown', onDocMouseDown)
   window.addEventListener('resize', onViewportResize)
 })
 
 onUnmounted(() => {
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('mouseup',   onMouseUp)
+  document.removeEventListener('mousedown', onDocMouseDown)
   window.removeEventListener('resize', onViewportResize)
 })
 
@@ -207,7 +224,12 @@ function toggleMaximize() {
   maximized.value = !maximized.value
 }
 
+function toggleSysMenu()  { showSysMenu.value = !showSysMenu.value }
+function closeSysMenu()   { showSysMenu.value = false }
+function onDocMouseDown() { showSysMenu.value = false }
+
 function openCloseDialog() {
+  showSysMenu.value = false
   showCloseConfirm.value = true
 }
 
@@ -354,6 +376,7 @@ Restarting git-extract setup in ${bsodCountdown.value}...\
   background: linear-gradient(to right, #0d4a88 0%, #1a78cc 100%);
   flex-shrink: 0;
   cursor: default;
+  position: relative;   // anchor for system menu dropdown
 
   &__icon { font-size: 13px; color: $accent; flex-shrink: 0; }
 
@@ -368,6 +391,66 @@ Restarting git-extract setup in ${bsodCountdown.value}...\
   }
 
   &__controls { display: flex; gap: 2px; }
+
+  // clickable icon cursor
+  &__icon { cursor: default; }
+}
+
+// ── System menu (title-bar icon dropdown) ──────────────────────
+.w98-sysmenu {
+  position: absolute;
+  top: 100%;    // just below the title bar
+  left: 0;
+  z-index: 200;
+  min-width: 160px;
+  background: #F2F2F2;
+  border: 2px solid;
+  border-color: #e8e8e8 #606060 #606060 #e8e8e8;
+  outline: 1px solid #000;
+  box-shadow: 4px 4px 6px rgba(0,0,0,0.5);
+  padding: 2px 0;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 20px 3px 6px;
+    font-size: 11px;
+    cursor: default;
+    white-space: nowrap;
+
+    &:hover:not(.w98-sysmenu__item--disabled) {
+      background: $primary;
+      color: #fff;
+    }
+
+    &--disabled {
+      color: #808080;
+      text-shadow: 1px 1px 0 #fff;
+      cursor: default;
+    }
+  }
+
+  &__icon {
+    width: 14px;
+    font-size: 9px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+
+  &__hotkey {
+    margin-left: auto;
+    padding-left: 24px;
+    color: inherit;
+    font-size: 11px;
+  }
+
+  &__sep {
+    height: 0;
+    margin: 3px 2px;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #fff;
+  }
 }
 
 // ── Chrome buttons ─────────────────────────────────────────────
@@ -445,8 +528,7 @@ Restarting git-extract setup in ${bsodCountdown.value}...\
     font-size: 9px;
     font-weight: 700;
     line-height: 1;
-
-    &:hover:not(:disabled) { background: #e04040; color: #fff; }
+    // Win98 title buttons have no hover effect
   }
 }
 
