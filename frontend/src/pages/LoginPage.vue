@@ -1,102 +1,88 @@
 <template>
   <div class="wiz-page">
     <div class="wiz-page__head">
-      <div class="wiz-page__step-label">Step 1 of 3</div>
-      <h1 class="wiz-page__title">Sign In</h1>
-      <p class="wiz-page__desc">
-        Connect your account to browse repositories and run extractions.
-      </p>
+      <div class="wiz-page__head-icon">⎇</div>
+      <div class="wiz-page__head-text">
+        <div class="wiz-page__step-label">Step 1 of 3</div>
+        <h1 class="wiz-page__title">Welcome to git-extract Setup</h1>
+        <p class="wiz-page__desc">Sign in to get started.</p>
+      </div>
     </div>
 
     <div class="wiz-page__body">
-      <!-- Tool description -->
-      <div class="tool-intro q-mb-xl">
-        <div class="tool-intro__headline">What is git-extract?</div>
-        <p class="tool-intro__text">
+      <!-- What is this tool? -->
+      <div class="intro-box q-mb-md">
+        <div class="intro-box__title">What does git-extract do?</div>
+        <p class="intro-box__text">
           <strong>git-extract</strong> splits a subdirectory out of any Git repository into a
           brand-new repository — keeping the <em>complete commit history</em> for that path.
           No manual rebasing, no lost commits.
         </p>
-        <div class="tool-intro__steps">
-          <div class="tool-intro__step">
-            <div class="tool-intro__step-num">1</div>
-            <div>
-              <div class="tool-intro__step-title">Sign in</div>
-              <div class="tool-intro__step-desc">Connect your GitHub or GitLab account.</div>
-            </div>
-          </div>
-          <div class="tool-intro__step">
-            <div class="tool-intro__step-num">2</div>
-            <div>
-              <div class="tool-intro__step-title">Select a source repository</div>
-              <div class="tool-intro__step-desc">Pick the repo that contains the path you want to extract.</div>
-            </div>
-          </div>
-          <div class="tool-intro__step">
-            <div class="tool-intro__step-num">3</div>
-            <div>
-              <div class="tool-intro__step-title">Configure &amp; extract</div>
-              <div class="tool-intro__step-desc">
-                Choose the source folder, the target repository and branch, then click
-                <strong>Extract &amp; Push</strong>. A GitHub Actions job rewrites history and
-                pushes the result.
-              </div>
-            </div>
-          </div>
-        </div>
+        <table class="intro-steps">
+          <tr>
+            <td class="intro-steps__num">1.</td>
+            <td><strong>Sign in</strong> — connect your GitHub or GitLab account.</td>
+          </tr>
+          <tr>
+            <td class="intro-steps__num">2.</td>
+            <td><strong>Select a source repository</strong> — pick the repo containing the path to extract.</td>
+          </tr>
+          <tr>
+            <td class="intro-steps__num">3.</td>
+            <td><strong>Configure &amp; extract</strong> — choose the source folder, target repo and branch, then click <strong>Extract &amp; Push</strong>. A GitHub Actions job rewrites history and pushes the result.</td>
+          </tr>
+        </table>
       </div>
 
-      <q-banner v-if="errorMessage" rounded class="bg-negative text-white q-mb-lg">
+      <q-banner v-if="errorMessage" class="w98-banner w98-banner--error q-mb-sm">
         {{ errorMessage }}
       </q-banner>
 
-      <div class="login-providers">
-        <!-- GitHub -->
-        <div class="provider-row" @click="loginGithub">
-          <q-icon name="fab fa-github" size="32px" class="provider-row__icon" />
-          <div class="provider-row__body">
-            <div class="provider-row__name">Sign in with GitHub</div>
-            <div class="provider-row__hint">OAuth — public &amp; private repos</div>
-          </div>
-          <q-icon name="chevron_right" size="20px" color="grey-5" />
+      <!-- Provider buttons -->
+      <div class="w98-field-label">Sign in with:</div>
+
+      <div class="w98-list" style="max-width: 400px">
+        <div class="w98-list-row" @click="loginGithub">
+          <q-icon name="fab fa-github" size="18px" />
+          <span class="w98-list-row__name">GitHub</span>
+          <span class="w98-list-row__meta">OAuth · public &amp; private repos</span>
         </div>
-
-        <div class="provider-sep">or</div>
-
-        <!-- GitLab host input -->
-        <div class="q-mb-sm">
-          <q-input
-            v-model="gitlabHost"
-            outlined
-            dense
-            label="GitLab host"
-            prefix="https://"
-            hint="Change only for self-hosted GitLab instances"
-          />
+        <div class="w98-list-row" @click="loginGitlab">
+          <q-icon name="fab fa-gitlab" size="18px" color="orange" />
+          <span class="w98-list-row__name">GitLab</span>
+          <span class="w98-list-row__meta">PKCE · gitlab.com or self-hosted</span>
         </div>
+      </div>
 
-        <!-- GitLab -->
-        <div class="provider-row" @click="loginGitlab">
-          <q-icon name="fab fa-gitlab" size="32px" color="orange" class="provider-row__icon" />
-          <div class="provider-row__body">
-            <div class="provider-row__name">Sign in with GitLab</div>
-            <div class="provider-row__hint">PKCE — gitlab.com or self-hosted</div>
-          </div>
-          <q-icon name="chevron_right" size="20px" color="grey-5" />
+      <div class="q-mt-sm" style="max-width: 400px">
+        <div class="w98-field-label">GitLab host:</div>
+        <input
+          v-model="gitlabHost"
+          class="w98-input"
+          placeholder="gitlab.com"
+        />
+        <div style="font-size:10px;color:#808080;margin-top:2px">
+          Change only for self-hosted GitLab instances.
         </div>
       </div>
     </div>
-    <!-- no footer nav: user advances by authenticating -->
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { startGitlabLogin } from '../services/gitlab.js'
+import { useWizardNav } from '../composables/useWizardNav.js'
 
 const route = useRoute()
+const nav = useWizardNav()
 const gitlabHost = ref('gitlab.com')
+
+// No Back/Next on welcome — user advances by authenticating
+onMounted(() => {
+  nav.value = { onBack: null, onNext: null, backLabel: '< Back', nextLabel: 'Next >', nextDisabled: false }
+})
 
 const errorMessage = computed(() => {
   if (!route.query.error) return null
@@ -121,117 +107,69 @@ async function loginGitlab() {
 </script>
 
 <style lang="scss" scoped>
-.tool-intro {
-  max-width: 560px;
-  padding: 20px 24px;
-  border: 1px solid #d8d8d8;
-  border-left: 4px solid $secondary;
-  border-radius: 3px;
-  background: #f8fdf9;
+.intro-box {
+  max-width: 500px;
+  padding: 10px 12px;
+  background: #fffff0;
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
 
-  &__headline {
-    font-size: 13px;
+  &__title {
+    font-size: 12px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
     color: $primary;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
   }
 
   &__text {
-    font-size: 13px;
-    color: #444;
-    margin: 0 0 16px;
-    line-height: 1.6;
-  }
-
-  &__steps {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  &__step {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  &__step-num {
-    flex-shrink: 0;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: $secondary;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 1px;
-  }
-
-  &__step-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: $primary;
-  }
-
-  &__step-desc {
-    font-size: 12px;
-    color: #666;
-    margin-top: 1px;
+    font-size: 11px;
+    color: #333;
+    margin: 0 0 8px;
     line-height: 1.5;
   }
 }
 
-.login-providers {
-  max-width: 460px;
-}
+.intro-steps {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11px;
 
-.provider-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  border: 1px solid #d4d4d4;
-  border-radius: 3px;
-  cursor: pointer;
-  background: #fff;
-  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+  td { padding: 2px 4px; vertical-align: top; }
 
-  &:hover {
-    border-color: $primary;
-    background: #f0f4fa;
-    box-shadow: 0 1px 4px rgba(30, 46, 74, 0.12);
-  }
-
-  &__icon {
-    flex-shrink: 0;
-  }
-
-  &__body {
-    flex: 1;
-  }
-
-  &__name {
-    font-size: 14px;
-    font-weight: 600;
-    color: $primary;
-  }
-
-  &__hint {
-    font-size: 12px;
-    color: #777;
-    margin-top: 2px;
+  &__num {
+    font-weight: 700;
+    color: $secondary;
+    white-space: nowrap;
+    padding-right: 6px;
   }
 }
 
-.provider-sep {
-  text-align: center;
-  color: #bbb;
+.w98-input {
+  width: 100%;
+  max-width: 400px;
+  height: 21px;
+  padding: 2px 4px;
+  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
   font-size: 12px;
-  margin: 10px 0;
+  border: none;
+  box-shadow:
+    inset  1px  1px #0a0a0a,
+    inset -1px -1px #ffffff,
+    inset  2px  2px #808080,
+    inset -2px -2px #dfdfdf;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.w98-banner {
+  font-size: 11px;
+  padding: 6px 10px;
+  border: 2px solid;
+
+  &--error {
+    background: #ffeeee;
+    border-color: #c10015;
+    color: #c10015;
+  }
 }
 </style>

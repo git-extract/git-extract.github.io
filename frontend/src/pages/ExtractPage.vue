@@ -1,26 +1,32 @@
 <template>
   <div class="wiz-page">
-    <!-- ── No source selected ──────────────────────────────────── -->
+
+    <!-- ── No source ──────────────────────────────────────────── -->
     <template v-if="!source">
       <div class="wiz-page__head">
-        <div class="wiz-page__step-label">Step 3 of 3</div>
-        <h1 class="wiz-page__title">Configure Extraction</h1>
-        <p class="wiz-page__desc">No repository selected yet.</p>
+        <div class="wiz-page__head-icon">⚙</div>
+        <div class="wiz-page__head-text">
+          <div class="wiz-page__step-label">Step 3 of 3</div>
+          <h1 class="wiz-page__title">Configure Extraction</h1>
+          <p class="wiz-page__desc">No repository selected.</p>
+        </div>
       </div>
       <div class="wiz-page__body">
-        <q-btn flat icon="arrow_back" label="Go back and pick a repository" color="primary" to="/repos" />
+        <p style="font-size:12px">Please go back and select a source repository first.</p>
       </div>
     </template>
 
-    <!-- ── Post-submit: Extraction running ───────────────────────── -->
+    <!-- ── Extracting ────────────────────────────────────────── -->
     <template v-else-if="submitted">
       <div class="wiz-page__head">
-        <div class="wiz-page__step-label">Step 3 of 3</div>
-        <h1 class="wiz-page__title">Extracting…</h1>
-        <p class="wiz-page__desc">
-          <strong>{{ source.fullName }}</strong> &rarr;
-          <strong>{{ store.selectedTarget?.fullName }}</strong>
-        </p>
+        <div class="wiz-page__head-icon">🚀</div>
+        <div class="wiz-page__head-text">
+          <div class="wiz-page__step-label">Step 4 of 3</div>
+          <h1 class="wiz-page__title">Extracting…</h1>
+          <p class="wiz-page__desc">
+            {{ source.fullName }} → {{ store.selectedTarget?.fullName }}
+          </p>
+        </div>
       </div>
       <div class="wiz-page__body">
         <StatusPoller
@@ -29,142 +35,116 @@
           :run-url="runUrl"
           :target-repo-url="targetRepoUrl"
         />
-        <q-banner v-else rounded class="bg-positive text-white">
-          <template #avatar><q-icon name="check_circle" /></template>
-          Extraction job submitted.
-        </q-banner>
-
-        <div class="q-mt-lg">
-          <q-btn flat icon="arrow_back" label="Start a new extraction" color="primary" @click="reset" />
+        <div v-else class="w98-panel" style="max-width:400px">
+          <div class="w98-panel__body" style="font-size:12px">
+            ✔ Extraction job submitted.
+          </div>
         </div>
       </div>
     </template>
 
-    <!-- ── Configure ──────────────────────────────────────────────── -->
+    <!-- ── Configure ─────────────────────────────────────────── -->
     <template v-else>
       <div class="wiz-page__head">
-        <div class="wiz-page__step-label">Step 3 of 3</div>
-        <h1 class="wiz-page__title">Configure Extraction</h1>
-        <p class="wiz-page__desc">
-          Pick a source folder, choose the target repository and branch, then click
-          <strong>Extract &amp; Push</strong>.
-        </p>
+        <div class="wiz-page__head-icon">⚙</div>
+        <div class="wiz-page__head-text">
+          <div class="wiz-page__step-label">Step 3 of 3</div>
+          <h1 class="wiz-page__title">Configure Extraction</h1>
+          <p class="wiz-page__desc">
+            Select a source folder, choose the destination, then click
+            <strong>Extract &amp; Push</strong>.
+          </p>
+        </div>
       </div>
 
       <div class="wiz-page__body">
-        <!-- Source repo + branch row -->
-        <div class="cfg-group q-mb-lg">
-          <div class="cfg-group__label">Source</div>
-          <div class="row items-center q-gutter-sm">
-            <div class="text-weight-medium text-primary">{{ source.fullName }}</div>
-            <q-select
-              v-model="sourceBranch"
-              :options="sourceBranches"
-              dense
-              outlined
-              style="min-width: 160px"
-              @update:model-value="loadTree"
-            />
-          </div>
+        <!-- Source repo + branch -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="w98-field-label" style="margin:0">Source:</span>
+          <span style="font-size:12px;font-weight:700;color:#1e2e4a">{{ source.fullName }}</span>
+          <select v-model="sourceBranch" class="w98-select" @change="loadTree">
+            <option v-for="b in sourceBranches" :key="b" :value="b">{{ b }}</option>
+          </select>
         </div>
 
-        <div class="cfg-columns">
-          <!-- Left: folder tree -->
-          <div class="cfg-panel">
-            <div class="cfg-panel__head">
-              <q-icon name="folder_open" size="16px" class="q-mr-xs" />
-              Source folder
-            </div>
-            <div class="cfg-panel__body">
-              <div v-if="treeLoading" class="flex flex-center q-py-md">
-                <q-spinner color="primary" size="32px" />
-              </div>
-              <FolderTree
-                v-else
-                v-model="store.sourcePath"
-                :items="store.sourceTree"
-              />
-              <div v-if="!treeLoading && !store.sourceTree.length" class="text-caption text-grey q-pa-sm">
-                No directories found in this branch.
+        <!-- Two-panel grid -->
+        <div class="cfg-grid">
+          <!-- Folder tree -->
+          <div class="w98-panel">
+            <div class="w98-panel__head">📁 Source Folder</div>
+            <div class="w98-panel__body" style="min-height:180px;overflow-y:auto">
+              <div v-if="treeLoading" style="font-size:11px;color:#808080;padding:4px">Loading…</div>
+              <FolderTree v-else v-model="store.sourcePath" :items="store.sourceTree" />
+              <div v-if="!treeLoading && !store.sourceTree.length" style="font-size:11px;color:#808080">
+                No directories found.
               </div>
             </div>
           </div>
 
-          <!-- Right: target options -->
-          <div class="cfg-panel">
-            <div class="cfg-panel__head">
-              <q-icon name="drive_file_move" size="16px" class="q-mr-xs" />
-              Destination
-            </div>
-            <div class="cfg-panel__body q-gutter-md column">
-              <q-select
-                v-model="store.selectedTarget"
-                :options="store.list"
-                option-label="fullName"
-                option-value="id"
-                label="Target repository"
-                outlined
-                use-input
-                input-debounce="300"
-                @filter="filterRepos"
-                @update:model-value="loadTargetBranches"
-              />
-              <q-select
-                v-model="targetBranch"
-                :options="targetBranches"
-                label="Target branch"
-                outlined
-                dense
-              />
-              <q-input
-                v-model="store.targetPath"
-                label="Destination path inside target repo"
-                outlined
-                dense
-              />
+          <!-- Destination -->
+          <div class="w98-panel">
+            <div class="w98-panel__head">📂 Destination</div>
+            <div class="w98-panel__body">
+              <div class="cfg-field">
+                <label class="w98-field-label">Target repository:</label>
+                <q-select
+                  v-model="store.selectedTarget"
+                  :options="store.list"
+                  option-label="fullName"
+                  option-value="id"
+                  outlined
+                  dense
+                  use-input
+                  input-debounce="300"
+                  @filter="filterRepos"
+                  @update:model-value="loadTargetBranches"
+                />
+              </div>
+              <div class="cfg-field">
+                <label class="w98-field-label">Target branch:</label>
+                <select v-model="targetBranch" class="w98-select w98-select--full">
+                  <option v-for="b in targetBranches" :key="b" :value="b">{{ b }}</option>
+                </select>
+              </div>
+              <div class="cfg-field">
+                <label class="w98-field-label">Destination path:</label>
+                <input v-model="store.targetPath" class="w98-input-full" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Nav bar -->
-      <div class="wiz-page__nav">
-        <q-btn flat label="‹ Back" @click="$router.push('/repos')" />
-        <q-btn
-          color="primary"
-          icon-right="send"
-          label="Extract & Push"
-          :disable="!canSubmit"
-          :loading="submitting"
-          @click="submit"
-        />
       </div>
     </template>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useReposStore } from '../stores/repos.js'
 import { useAuthStore } from '../stores/auth.js'
 import { getBranches as getGhBranches, getTree as getGhTree } from '../services/github.js'
 import { getBranches as getGlBranches, getTree as getGlTree } from '../services/gitlab.js'
+import { useWizardNav } from '../composables/useWizardNav.js'
 import FolderTree from '../components/FolderTree.vue'
 import StatusPoller from '../components/StatusPoller.vue'
 
-const store = useReposStore()
-const auth = useAuthStore()
+const store  = useReposStore()
+const auth   = useAuthStore()
+const router = useRouter()
+const nav    = useWizardNav()
 
-const source = computed(() => store.selectedSource)
-const sourceBranch = ref(source.value?.defaultBranch || '')
+const source        = computed(() => store.selectedSource)
+const sourceBranch  = ref(source.value?.defaultBranch || '')
 const sourceBranches = ref([])
-const targetBranch = ref('')
+const targetBranch  = ref('')
 const targetBranches = ref([])
-const treeLoading = ref(false)
-const submitting = ref(false)
-const submitted = ref(false)
-const runId = ref('')
-const runUrl = ref('')
+const treeLoading   = ref(false)
+const submitting    = ref(false)
+const submitted     = ref(false)
+const runId         = ref('')
+const runUrl        = ref('')
 
 const canSubmit = computed(
   () => !!store.sourcePath && !!store.selectedTarget && !!targetBranch.value,
@@ -177,16 +157,42 @@ const targetRepoUrl = computed(() => {
 })
 
 onMounted(async () => {
+  updateNav()
   if (!source.value) return
   await loadSourceBranches()
   await loadTree()
 })
 
+watch([canSubmit, submitted, source], updateNav)
+
+function updateNav() {
+  if (!source.value) {
+    nav.value = {
+      backLabel: '< Back', nextLabel: 'Next >', nextDisabled: true,
+      onBack: () => router.push('/repos'), onNext: null,
+    }
+    return
+  }
+  if (submitted.value) {
+    nav.value = {
+      backLabel: '← Start over', nextLabel: 'Finish', nextDisabled: false,
+      onBack: () => reset(), onNext: () => router.push('/repos'),
+    }
+    return
+  }
+  nav.value = {
+    backLabel: '< Back',
+    nextLabel: submitting.value ? 'Extracting…' : 'Extract && Push',
+    nextDisabled: !canSubmit.value || submitting.value,
+    onBack: () => router.push('/repos'),
+    onNext: () => submit(),
+  }
+}
+
 async function loadSourceBranches() {
-  const data =
-    auth.provider === 'github'
-      ? await getGhBranches(auth.token, source.value.owner, source.value.name)
-      : await getGlBranches(auth.token, auth.gitlabHost, source.value.id)
+  const data = auth.provider === 'github'
+    ? await getGhBranches(auth.token, source.value.owner, source.value.name)
+    : await getGlBranches(auth.token, auth.gitlabHost, source.value.id)
   if (!data.error) {
     sourceBranches.value = data.map((b) => b.name)
     if (!sourceBranch.value) sourceBranch.value = sourceBranches.value[0] || ''
@@ -217,10 +223,9 @@ async function loadTargetBranches() {
   if (!store.selectedTarget) return
   targetBranch.value = ''
   targetBranches.value = []
-  const data =
-    auth.provider === 'github'
-      ? await getGhBranches(auth.token, store.selectedTarget.owner, store.selectedTarget.name)
-      : await getGlBranches(auth.token, auth.gitlabHost, store.selectedTarget.id)
+  const data = auth.provider === 'github'
+    ? await getGhBranches(auth.token, store.selectedTarget.owner, store.selectedTarget.name)
+    : await getGlBranches(auth.token, auth.gitlabHost, store.selectedTarget.id)
   if (!data.error) {
     targetBranches.value = data.map((b) => b.name)
     targetBranch.value = store.selectedTarget.defaultBranch || targetBranches.value[0] || 'main'
@@ -228,15 +233,13 @@ async function loadTargetBranches() {
 }
 
 function filterRepos(val, update) {
-  update(() => {
-    store.search = val
-  })
+  update(() => { store.search = val })
 }
 
 async function submit() {
   submitting.value = true
-  const base =
-    auth.provider === 'github' ? 'https://github.com' : `https://${auth.gitlabHost}`
+  updateNav()
+  const base = auth.provider === 'github' ? 'https://github.com' : `https://${auth.gitlabHost}`
   const res = await fetch(`${process.env.WORKER_URL}/extract`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -263,52 +266,56 @@ function reset() {
   runUrl.value = ''
   store.sourcePath = ''
   store.selectedTarget = null
+  router.push('/repos')
 }
 </script>
 
 <style lang="scss" scoped>
-.cfg-group {
-  &__label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 6px;
-  }
-}
-
-.cfg-columns {
+.cfg-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 8px;
 
-  @media (max-width: 680px) {
+  @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
 }
 
-.cfg-panel {
-  border: 1px solid #d8d8d8;
-  border-radius: 3px;
-  overflow: hidden;
+.cfg-field {
+  margin-bottom: 10px;
+  &:last-child { margin-bottom: 0; }
+}
 
-  &__head {
-    display: flex;
-    align-items: center;
-    padding: 8px 14px;
-    background: #f0f0f0;
-    border-bottom: 1px solid #d8d8d8;
-    font-size: 12px;
-    font-weight: 600;
-    color: $primary;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-  }
+.w98-select {
+  height: 21px;
+  padding: 0 4px;
+  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
+  font-size: 12px;
+  border: none;
+  box-shadow:
+    inset  1px  1px #0a0a0a,
+    inset -1px -1px #ffffff,
+    inset  2px  2px #808080,
+    inset -2px -2px #dfdfdf;
+  background: #fff;
+  cursor: pointer;
 
-  &__body {
-    padding: 12px 14px;
-    min-height: 120px;
-  }
+  &--full { width: 100%; }
+}
+
+.w98-input-full {
+  width: 100%;
+  height: 21px;
+  padding: 2px 4px;
+  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
+  font-size: 12px;
+  border: none;
+  box-shadow:
+    inset  1px  1px #0a0a0a,
+    inset -1px -1px #ffffff,
+    inset  2px  2px #808080,
+    inset -2px -2px #dfdfdf;
+  background: #fff;
+  box-sizing: border-box;
 }
 </style>

@@ -1,74 +1,102 @@
 <template>
-  <div class="wiz-shell">
-    <!-- ── Header ─────────────────────────────────────────────────── -->
-    <header class="wiz-header">
-      <div class="wiz-header__brand">
-        <q-icon name="merge_type" size="28px" class="q-mr-sm" />
-        <div>
-          <div class="wiz-header__title">git-extract</div>
-          <div class="wiz-header__sub">Extract any path. Keep all history.</div>
+  <!-- Classic Win98 desktop background -->
+  <div class="w98-desktop">
+    <!-- The "window" -->
+    <div class="w98-window">
+
+      <!-- ── Title bar ──────────────────────────────────────────── -->
+      <div class="w98-titlebar">
+        <span class="w98-titlebar__icon">⎇</span>
+        <span class="w98-titlebar__text">git-extract Setup</span>
+        <div class="w98-titlebar__controls">
+          <div class="w98-chrome-btn">_</div>
+          <div class="w98-chrome-btn">□</div>
+          <div class="w98-chrome-btn w98-chrome-btn--close">✕</div>
         </div>
       </div>
 
-      <div v-if="auth.isLoggedIn" class="wiz-header__user">
-        <img
-          v-if="auth.user?.avatar_url"
-          :src="auth.user.avatar_url"
-          class="wiz-header__avatar"
-        />
-        <q-icon v-else name="person" color="white" size="20px" />
-        <span class="q-mx-sm">{{ auth.user?.login || auth.user?.username }}</span>
-        <q-badge :label="auth.provider" color="secondary" class="q-mr-sm" />
-        <q-btn
-          flat
-          dense
-          size="sm"
-          color="white"
-          label="Sign out"
-          @click="logout"
-        />
-      </div>
-    </header>
+      <!-- ── Body ──────────────────────────────────────────────── -->
+      <div class="w98-body">
 
-    <!-- ── Body ──────────────────────────────────────────────────── -->
-    <div class="wiz-body">
-      <!-- Left step panel -->
-      <nav class="wiz-nav">
-        <div class="wiz-nav__label">Steps</div>
+        <!-- Left product panel -->
+        <div class="w98-sidebar">
+          <div class="w98-sidebar__logo">⎇</div>
+          <div class="w98-sidebar__product">git-extract</div>
+          <div class="w98-sidebar__tagline">Setup Wizard</div>
 
-        <div
-          v-for="step in steps"
-          :key="step.id"
-          class="wiz-step"
-          :class="{
-            'wiz-step--active': currentStep === step.id,
-            'wiz-step--done': currentStep > step.id,
-          }"
-        >
-          <div class="wiz-step__icon">
-            <q-icon
-              v-if="currentStep > step.id"
-              name="check_circle"
-              size="18px"
-              color="secondary"
-            />
-            <div v-else-if="currentStep === step.id" class="wiz-dot wiz-dot--active" />
-            <div v-else class="wiz-dot wiz-dot--idle" />
+          <div class="w98-sidebar__divider" />
+
+          <div
+            v-for="step in steps"
+            :key="step.id"
+            class="w98-sidebar__step"
+            :class="{
+              'w98-sidebar__step--active': currentStep === step.id,
+              'w98-sidebar__step--done':   currentStep > step.id,
+            }"
+          >
+            <span class="w98-sidebar__arrow">
+              {{ currentStep > step.id ? '✔' : currentStep === step.id ? '►' : '○' }}
+            </span>
+            <span>{{ step.label }}</span>
           </div>
-          <div class="wiz-step__text">{{ step.label }}</div>
+
+          <!-- user chip at bottom of sidebar -->
+          <div v-if="auth.isLoggedIn" class="w98-sidebar__user">
+            <img
+              v-if="auth.user?.avatar_url"
+              :src="auth.user.avatar_url"
+              class="w98-sidebar__avatar"
+            />
+            <span class="w98-sidebar__username">
+              {{ auth.user?.login || auth.user?.username }}
+            </span>
+          </div>
         </div>
-      </nav>
 
-      <!-- Content pane -->
-      <main class="wiz-content">
-        <router-view />
-      </main>
+        <!-- Right content pane -->
+        <div class="w98-content">
+          <router-view />
+        </div>
+
+      </div>
+
+      <!-- ── Footer / button bar ───────────────────────────────── -->
+      <div class="w98-footer">
+        <!-- classic Win98 two-line separator -->
+        <div class="w98-sep" />
+
+        <div class="w98-footer__inner">
+          <div class="w98-footer__status">
+            Step {{ currentStep }} of {{ steps.length }}
+            <template v-if="auth.isLoggedIn">
+              &nbsp;·&nbsp;
+              <button class="w98-link-btn" @click="logout">Sign out</button>
+            </template>
+          </div>
+
+          <div class="w98-footer__nav">
+            <button
+              v-if="nav.onBack"
+              class="w98-btn"
+              @click="nav.onBack"
+            >{{ nav.backLabel }}</button>
+
+            <button
+              v-if="nav.onNext"
+              class="w98-btn w98-btn--primary"
+              :disabled="nav.nextDisabled"
+              @click="nav.onNext"
+            >{{ nav.nextLabel }}</button>
+
+            <div class="w98-btn-sep" />
+
+            <button class="w98-btn" @click="logout">Cancel</button>
+          </div>
+        </div>
+      </div>
+
     </div>
-
-    <!-- ── Footer ─────────────────────────────────────────────────── -->
-    <footer class="wiz-footer">
-      git-extract &copy; {{ year }}
-    </footer>
   </div>
 </template>
 
@@ -76,14 +104,15 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import { provideWizardNav } from '../composables/useWizardNav.js'
 
-const auth = useAuthStore()
+const auth  = useAuthStore()
 const route = useRoute()
 const router = useRouter()
-const year = new Date().getFullYear()
+const nav   = provideWizardNav()
 
 const steps = [
-  { id: 1, label: 'Sign In' },
+  { id: 1, label: 'Welcome' },
   { id: 2, label: 'Select Repository' },
   { id: 3, label: 'Configure' },
   { id: 4, label: 'Extract' },
@@ -104,152 +133,306 @@ function logout() {
 </script>
 
 <style lang="scss">
-/* ── Shell ─────────────────────────────────────────────────────── */
-.wiz-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  font-family: 'Segoe UI', Roboto, sans-serif;
-}
+/* ── Fonts ────────────────────────────────────────────────────── */
+* { font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif; }
 
-/* ── Header ────────────────────────────────────────────────────── */
-.wiz-header {
+/* ── Desktop ──────────────────────────────────────────────────── */
+.w98-desktop {
+  position: fixed;
+  inset: 0;
+  background: #008080;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  height: 64px;
-  background: $primary;
-  color: #fff;
+  justify-content: center;
+}
+
+/* ── Window ───────────────────────────────────────────────────── */
+.w98-window {
+  display: flex;
+  flex-direction: column;
+  width: min(860px, 98vw);
+  height: min(560px, 96vh);
+  background: #c0c0c0;
+
+  /* classic Win98 raised window border */
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset  1px  1px #ffffff,
+    inset -2px -2px #808080,
+    inset  2px  2px #dfdfdf;
+}
+
+/* ── Title bar ────────────────────────────────────────────────── */
+.w98-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 6px;
+  background: linear-gradient(to right, $primary 0%, lighten($primary, 18%) 100%);
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  z-index: 10;
+  user-select: none;
 
-  &__brand {
-    display: flex;
-    align-items: center;
+  &__icon {
+    font-size: 12px;
+    color: #fff;
   }
 
-  &__title {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-  }
-
-  &__sub {
+  &__text {
+    flex: 1;
     font-size: 11px;
-    opacity: 0.65;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  &__controls {
+    display: flex;
+    gap: 2px;
+  }
+}
+
+.w98-chrome-btn {
+  width: 16px;
+  height: 14px;
+  background: #c0c0c0;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  color: #000;
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset  1px  1px #ffffff,
+    inset -2px -2px #808080,
+    inset  2px  2px #dfdfdf;
+
+  &--close { margin-left: 2px; }
+}
+
+/* ── Body ─────────────────────────────────────────────────────── */
+.w98-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  margin: 3px;
+  gap: 3px;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+.w98-sidebar {
+  width: 176px;
+  flex-shrink: 0;
+  background: $primary;
+  padding: 20px 0 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+
+  /* inset border on right side */
+  box-shadow:
+    inset  1px  1px #ffffff44,
+    inset -1px -1px #00000044;
+
+  &__logo {
+    text-align: center;
+    font-size: 32px;
+    color: $secondary;
+    margin-bottom: 6px;
+  }
+
+  &__product {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+
+  &__tagline {
+    text-align: center;
+    font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  &__divider {
+    margin: 14px 16px;
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-bottom: 1px solid rgba(0,0,0,0.3);
+  }
+
+  &__step {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.3;
+
+    &--active {
+      color: #fff;
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+    }
+
+    &--done {
+      color: $secondary;
+    }
+  }
+
+  &__arrow {
+    flex-shrink: 0;
+    font-size: 10px;
     margin-top: 1px;
   }
 
   &__user {
+    margin-top: auto;
+    padding: 10px 14px 0;
     display: flex;
     align-items: center;
-    font-size: 13px;
-    color: #fff;
+    gap: 6px;
+    border-top: 1px solid rgba(255,255,255,0.12);
   }
 
   &__avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
     object-fit: cover;
   }
-}
 
-/* ── Body ──────────────────────────────────────────────────────── */
-.wiz-body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-/* ── Step nav ──────────────────────────────────────────────────── */
-.wiz-nav {
-  width: 200px;
-  flex-shrink: 0;
-  background: $dark;
-  padding: 24px 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-
-  &__label {
+  &__username {
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.35);
-    padding: 0 20px 12px;
-  }
-}
-
-.wiz-step {
-  display: flex;
-  align-items: center;
-  padding: 10px 20px;
-  gap: 12px;
-  transition: background 0.15s;
-
-  &--active {
-    background: rgba(255, 255, 255, 0.07);
-  }
-
-  &__icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    flex-shrink: 0;
-  }
-
-  &__text {
-    font-size: 13px;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255,255,255,0.6);
     white-space: nowrap;
-
-    .wiz-step--active & {
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .wiz-step--done & {
-      color: rgba(255, 255, 255, 0.6);
-    }
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
-.wiz-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-
-  &--active {
-    background: $secondary;
-    box-shadow: 0 0 0 3px rgba(46, 168, 78, 0.25);
-  }
-
-  &--idle {
-    border: 2px solid rgba(255, 255, 255, 0.2);
-  }
-}
-
-/* ── Content ───────────────────────────────────────────────────── */
-.wiz-content {
+/* ── Content pane ─────────────────────────────────────────────── */
+.w98-content {
   flex: 1;
   overflow-y: auto;
   background: #fff;
+  /* inset border */
+  box-shadow:
+    inset  1px  1px #808080,
+    inset -1px -1px #dfdfdf,
+    inset  2px  2px #0a0a0a,
+    inset -2px -2px #ffffff;
 }
 
-/* ── Footer ────────────────────────────────────────────────────── */
-.wiz-footer {
+/* ── Footer ───────────────────────────────────────────────────── */
+.w98-footer {
   flex-shrink: 0;
-  height: 32px;
-  line-height: 32px;
-  padding: 0 24px;
-  background: #e4e4e4;
-  border-top: 1px solid #c0c0c0;
+  padding: 0 4px 4px;
+}
+
+.w98-sep {
+  height: 0;
+  margin: 0 0 4px;
+  border-top: 1px solid #808080;
+  border-bottom: 1px solid #fff;
+}
+
+.w98-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.w98-footer__status {
   font-size: 11px;
-  color: #666;
+  color: #444;
+  padding-left: 4px;
+}
+
+.w98-footer__nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.w98-btn-sep {
+  width: 1px;
+  height: 20px;
+  background: #808080;
+  margin: 0 4px;
+  box-shadow: 1px 0 #fff;
+}
+
+/* ── Win98 buttons ────────────────────────────────────────────── */
+.w98-btn {
+  min-width: 75px;
+  height: 23px;
+  padding: 0 10px;
+  background: #c0c0c0;
+  color: #000;
+  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
+  font-size: 11px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset  1px  1px #ffffff,
+    inset -2px -2px #808080,
+    inset  2px  2px #dfdfdf;
+
+  &:active:not(:disabled) {
+    box-shadow:
+      inset -1px -1px #ffffff,
+      inset  1px  1px #0a0a0a,
+      inset -2px -2px #dfdfdf,
+      inset  2px  2px #808080;
+    padding: 1px 9px 0 11px;
+  }
+
+  &:disabled {
+    color: #808080;
+    cursor: default;
+    text-shadow: 1px 1px #fff;
+  }
+
+  &--primary {
+    /* keep Win98 shape but brand color */
+    background: $primary;
+    color: #fff;
+    font-weight: 700;
+    box-shadow:
+      inset -1px -1px #000,
+      inset  1px  1px lighten($primary, 30%),
+      inset -2px -2px darken($primary, 10%),
+      inset  2px  2px lighten($primary, 15%);
+
+    &:active:not(:disabled) {
+      box-shadow:
+        inset -1px -1px lighten($primary, 30%),
+        inset  1px  1px #000,
+        inset -2px -2px lighten($primary, 15%),
+        inset  2px  2px darken($primary, 10%);
+      padding: 1px 9px 0 11px;
+    }
+  }
+}
+
+.w98-link-btn {
+  background: none;
+  border: none;
+  color: $secondary;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
 }
 </style>
