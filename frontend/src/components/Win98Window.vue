@@ -281,9 +281,11 @@ function confirmClose() {
   }
 
   &:disabled {
-    color: #808080;
-    cursor: default;
-    text-shadow: 1px 1px #fff;
+    opacity: 1;              // cancel browser's built-in opacity dimming
+    color: #808080;          // grey text
+    text-shadow: 1px 1px 0 #fff; // white emboss offset — classic Win98 look
+    cursor: default;         // no "not-allowed" cursor
+    // raised 3D border stays exactly the same — Win98 never flattens it
     &:active { box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #e8e8e8; padding: 0; }
   }
 
@@ -427,9 +429,10 @@ function confirmClose() {
   }
 
   &:disabled {
+    opacity: 1;
     color: #808080;
+    text-shadow: 1px 1px 0 #fff;
     cursor: default;
-    text-shadow: 1px 1px #fff;
   }
 
   // Win98 "default" button — same grey but with a black focus border
@@ -440,10 +443,11 @@ function confirmClose() {
     font-weight: 700;
 
     &:disabled {
+      opacity: 1;
       outline-color: #808080;
       color: #808080;
+      text-shadow: 1px 1px 0 #fff;
       cursor: default;
-      text-shadow: 1px 1px #fff;
     }
   }
 }
