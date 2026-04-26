@@ -6,6 +6,7 @@
 
     <!-- BIOS POST screen -->
     <div v-else-if="phase === 'bios'" class="bios-screen">
+      <!-- POST text -->
       <div
         v-for="(item, i) in BIOS_CONTENT"
         :key="i"
@@ -13,6 +14,18 @@
         :class="{ 'bios-line--header': i < 2 }"
         :style="{ '--d': item.delay + 'ms' }"
       >{{ item.text }}</div>
+
+      <!-- Top-right logo badge -->
+      <div class="bios-logo">
+        <div class="bios-logo__flame">( ⎇ )</div>
+        <div class="bios-logo__brand">FENIX</div>
+        <div class="bios-logo__divider" />
+        <div class="bios-logo__product">RewardBIOS</div>
+        <div class="bios-logo__version">v6.00PG</div>
+        <div class="bios-logo__divider" />
+        <div class="bios-logo__copy">git-extract</div>
+        <div class="bios-logo__copy">Systems, Inc.</div>
+      </div>
     </div>
 
     <!-- CD boot -->
@@ -148,6 +161,7 @@ onMounted(() => {
 
 // ── BIOS POST ──────────────────────────────────────────────────
 .bios-screen {
+  position: relative;    // anchor for the logo
   padding: 18px 36px;
   font-size: 13px;
   line-height: 1.65;
@@ -156,6 +170,63 @@ onMounted(() => {
 
 .bios-line {
   &--header { color: #ffffff; }
+}
+
+// ── BIOS logo badge (top-right corner) ─────────────────────────
+.bios-logo {
+  position: absolute;
+  top: 18px;
+  right: 36px;
+  width: 140px;
+  background: #000080;           // classic BIOS badge blue
+  border: 2px solid #aaaaaa;
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: 'Courier New', Courier, monospace;
+  text-align: center;
+
+  &__flame {
+    font-size: 18px;
+    color: #ffcc00;              // amber glow
+    line-height: 1;
+    margin-bottom: 2px;
+    letter-spacing: 2px;
+  }
+
+  &__brand {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 3px;
+    line-height: 1;
+  }
+
+  &__product {
+    font-size: 10px;
+    color: #aaddff;
+    letter-spacing: 1px;
+  }
+
+  &__version {
+    font-size: 9px;
+    color: #88bbdd;
+  }
+
+  &__copy {
+    font-size: 9px;
+    color: #888888;
+    line-height: 1.3;
+  }
+
+  &__divider {
+    width: 80%;
+    height: 1px;
+    background: #446688;
+    margin: 3px 0;
+  }
 }
 
 // ── CD boot ────────────────────────────────────────────────────
