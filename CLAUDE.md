@@ -7,15 +7,15 @@ Extends `AGENTS.md` — read that file first. Rules here are Claude Code specifi
 ## Exploration
 
 - Use `Glob` and `Grep` tools before reading files — avoid loading large files speculatively.
-- When a task touches both `frontend/` and `worker/`, explore them in parallel with sub-agents.
+- When a task touches both `src/` and `worker/`, explore them in parallel with sub-agents.
 - Prefer the `Explore` sub-agent for open-ended codebase searches.
 
 ## Making Changes
 
 - Always read a file before editing it.
 - Use `Edit` (targeted diff) rather than `Write` (full rewrite) for existing files.
-- Run the relevant workspace lint/build after changes to catch issues early:
-  - Frontend: `npm -w frontend run lint`
+- Run the relevant lint/build after changes to catch issues early:
+  - Frontend: `npm run lint`
   - Worker: `npm -w worker run build`
 
 ## Git
