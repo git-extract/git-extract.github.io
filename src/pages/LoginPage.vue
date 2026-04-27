@@ -6,7 +6,7 @@
         <div class="wiz-page__step-label">Step 2 of 4</div>
         <h1 class="wiz-page__title">Sign In</h1>
         <p class="wiz-page__desc">
-          Select a Git provider, then click <strong>Sign In &gt;</strong>.
+          Sign in to at least one Git provider to continue.
         </p>
       </div>
     </div>
@@ -16,101 +16,145 @@
       <!-- Error banner -->
       <div v-if="errorMessage" class="login-error">⚠ {{ errorMessage }}</div>
 
-      <p class="login-intro">How would you like to sign in?</p>
-
-      <!-- ── Provider radio options ──────────────────────────────── -->
-      <div class="provider-options">
-        <label
-          v-for="p in providers"
-          :key="p.id"
-          class="provider-option"
-        >
-          <input
-            type="radio"
-            name="provider"
-            :value="p.id"
-            v-model="selected"
-          />
-          <div class="provider-option__body">
-            <span class="provider-option__name">
-              <q-icon :name="p.icon" class="provider-option__icon" :class="`provider-option__icon--${p.id}`" />
-              {{ p.name }}
-            </span>
-            <span class="provider-option__desc">{{ p.desc }}</span>
-          </div>
-        </label>
-      </div>
-
-      <!-- ── GitLab host (only when GitLab selected) ─────────────── -->
-      <transition name="slide">
-        <div v-if="selected === 'gitlab'" class="gitlab-host-box">
-          <div class="w98-group-box">
-            <div class="w98-group-box__label">GitLab Instance</div>
-            <div class="w98-group-box__body">
-              <label class="w98-field-label" for="gl-host" style="display:block;margin-bottom:4px">
-                Host:
-              </label>
-              <input
-                id="gl-host"
-                v-model="gitlabHost"
-                class="w98-input-host"
-                placeholder="gitlab.com"
-                spellcheck="false"
-              />
-              <div class="host-hint">
-                Use <code>gitlab.com</code> for the public instance.
-                Change only for self-hosted GitLab servers.
-              </div>
+      <!-- ── Provider table ──────────────────────────────────────── -->
+      <div class="provider-table-wrap">
+        <div class="provider-table-toolbar">
+          <!-- top-right Sign In dropdown -->
+          <div class="signin-dropdown" ref="dropdownRef">
+            <button
+              class="w98-btn signin-dropdown__btn"
+              @click="toggleDropdown"
+              aria-haspopup="listbox"
+              :aria-expanded="dropdownOpen"
+            >
+              Sign In ▾
+            </button>
+            <div v-if="dropdownOpen" class="signin-dropdown__menu" role="listbox">
+              <button
+                v-for="p in providers"
+                :key="p.id"
+                class="signin-dropdown__item"
+                :disabled="auth.provider === p.id"
+                @click="signIn(p.id)"
+              >
+                <q-icon :name="p.icon" class="signin-dropdown__icon" :class="`signin-dropdown__icon--${p.id}`" />
+                Sign in with {{ p.name }}
+              </button>
             </div>
           </div>
         </div>
-      </transition>
 
+        <table class="provider-table">
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="p in providers"
+              :key="p.id"
+              :class="{ 'provider-table__row--active': auth.provider === p.id }"
+            >
+              <td class="provider-table__name">
+                <q-icon :name="p.icon" class="provider-table__icon" :class="`provider-table__icon--${p.id}`" />
+                {{ p.name }}
+              </td>
+              <td class="provider-table__status">
+                <template v-if="auth.provider === p.id">
+                  <span class="status-badge status-badge--ok">✔</span>
+                  Signed in as
+                  <strong>{{ auth.user?.login || auth.user?.username }}</strong>
+                </template>
+                <template v-else>
+                  <span class="status-badge status-badge--none">—</span>
+                  Not signed in
+                </template>
+              </td>
+              <td class="provider-table__actions">
+                <template v-if="auth.provider === p.id">
+                  <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
+                </template>
+                <template v-else>
+                  <button class="w98-link-btn" @click="signIn(p.id)">Sign in…</button>
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- GitLab host input — shown below the table when gitlab is the active provider
+             or when a gitlab sign-in is pending -->
+        <transition name="slide">
+          <div v-if="showHostBox" class="gitlab-host-box">
+            <div class="w98-group-box">
+              <div class="w98-group-box__label">GitLab Instance</div>
+              <div class="w98-group-box__body">
+                <label class="w98-field-label" for="gl-host" style="display:block;margin-bottom:4px">Host:</label>
+                <input
+                  id="gl-host"
+                  v-model="gitlabHost"
+                  class="w98-input-host"
+                  placeholder="gitlab.com"
+                  spellcheck="false"
+                />
+                <div class="host-hint">
+                  Use <code>gitlab.com</code> for the public instance.
+                  Change only for self-hosted GitLab servers.
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
+
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { startGitlabLogin } from '../services/gitlab.js'
 import { useWizardNav } from '../composables/useWizardNav.js'
+import { useAuthStore } from '../stores/auth.js'
 
 const route      = useRoute()
 const router     = useRouter()
 const nav        = useWizardNav()
-const selected   = ref(null)
+const auth       = useAuthStore()
 const gitlabHost = ref('gitlab.com')
+const dropdownOpen = ref(false)
+const dropdownRef  = ref(null)
+const pendingGitlab = ref(false)
 
 const providers = [
-  {
-    id:   'github',
-    name: 'GitHub',
-    icon: 'fab fa-github',
-    desc: 'Sign in with GitHub via OAuth — grants access to public and private repositories.',
-  },
-  {
-    id:   'gitlab',
-    name: 'GitLab',
-    icon: 'fab fa-gitlab',
-    desc: 'Sign in with GitLab via PKCE — works with gitlab.com or a self-hosted instance.',
-  },
+  { id: 'github', name: 'GitHub', icon: 'fab fa-github' },
+  { id: 'gitlab', name: 'GitLab', icon: 'fab fa-gitlab' },
 ]
 
-onMounted(updateNav)
-watch(selected, updateNav)
+const showHostBox = computed(() => pendingGitlab.value || auth.provider === 'gitlab')
+
+onMounted(() => {
+  updateNav()
+  document.addEventListener('click', onDocClick)
+})
+onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
+watch(() => auth.isLoggedIn, updateNav)
 
 function updateNav() {
   nav.value = {
-    backLabel: '< Back',
+    backLabel:    '< Back',
     backDisabled: false,
-    onBack: () => router.push('/welcome'),
-    nextLabel: selected.value ? 'Sign In >' : 'Next >',
-    nextDisabled: !selected.value,
-    onNext: selected.value ? () => proceed() : null,
-    finishLabel: 'Finish',
+    onBack:       () => router.push('/welcome'),
+    nextLabel:    'Next >',
+    nextDisabled: !auth.isLoggedIn,
+    onNext:       auth.isLoggedIn ? () => router.push('/repos') : null,
+    finishLabel:  'Finish',
     finishDisabled: true,
-    onFinish: null,
+    onFinish:     null,
   }
 }
 
@@ -123,9 +167,24 @@ const errorMessage = computed(() => {
   return map[route.query.error] ?? `Authentication error: ${route.query.error}`
 })
 
-async function proceed() {
-  if (selected.value === 'github') loginGithub()
-  else if (selected.value === 'gitlab') await loginGitlab()
+function toggleDropdown() {
+  dropdownOpen.value = !dropdownOpen.value
+}
+
+function onDocClick(e) {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    dropdownOpen.value = false
+  }
+}
+
+async function signIn(providerId) {
+  dropdownOpen.value = false
+  if (providerId === 'github') {
+    loginGithub()
+  } else if (providerId === 'gitlab') {
+    pendingGitlab.value = true
+    await loginGitlab()
+  }
 }
 
 function loginGithub() {
@@ -150,59 +209,119 @@ async function loginGitlab() {
   border: 2px solid #c10015;
   background: #ffeeee;
   color: #c10015;
-  max-width: 420px;
+  max-width: 460px;
 }
 
-// ── Intro text ─────────────────────────────────────────────────────
-.login-intro {
-  font-size: 12px;
-  color: #000;
-  margin: 0 0 10px;
+// ── Provider table wrapper ─────────────────────────────────────────
+.provider-table-wrap {
+  max-width: 460px;
 }
 
-// ── Provider radio options ─────────────────────────────────────────
-// Intentionally plain — no boxes, no raised borders.
-// This matches real Win98 wizard radio-button pages
-// (Internet Connection Wizard, Add Hardware Wizard, etc.)
-.provider-options {
+// ── Toolbar (holds the Sign In dropdown) ──────────────────────────
+.provider-table-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: 440px;
-  margin-bottom: 18px;
+  justify-content: flex-end;
+  margin-bottom: 4px;
 }
 
-.provider-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  padding: 4px 2px;
-  cursor: pointer;
-  user-select: none;
+// ── Sign In dropdown ──────────────────────────────────────────────
+.signin-dropdown {
+  position: relative;
 
-  // No background, no box-shadow — just the native radio + text on white
-
-  input[type='radio'] {
-    flex-shrink: 0;
-    margin: 3px 0 0;
-    cursor: pointer;
-    accent-color: $primary;
+  &__btn {
+    min-width: 80px;
   }
 
-  &__body {
+  &__menu {
+    position: absolute;
+    top: calc(100% + 2px);
+    right: 0;
+    z-index: 100;
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    box-shadow: 1px 1px 0 #000;
+    min-width: 200px;
+    padding: 2px 0;
+  }
+
+  &__item {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-    line-height: 1;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 3px 14px;
+    background: none;
+    border: none;
+    font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
+    font-size: 12px;
+    color: #000;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover:not(:disabled) {
+      background: #000080;
+      color: #fff;
+
+      .signin-dropdown__icon { color: #fff; }
+    }
+
+    &:disabled {
+      color: #808080;
+      cursor: default;
+    }
   }
+
+  &__icon {
+    font-size: 13px !important;
+    color: #333;
+
+    &--gitlab { color: #e24329; }
+  }
+}
+
+// ── Provider table ─────────────────────────────────────────────────
+.provider-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow: inset 1px 1px 0 #000;
+  background: #fff;
+  margin-bottom: 12px;
+
+  thead tr {
+    background: #000080;
+    color: #fff;
+  }
+
+  th {
+    padding: 3px 8px;
+    font-weight: 700;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+
+  td {
+    padding: 5px 8px;
+    border-top: 1px solid #e0e0e0;
+    color: #000;
+    vertical-align: middle;
+  }
+
+  tbody tr:hover { background: #f0f0f0; }
+
+  &__row--active td { background: #ddeeff; }
+  &__row--active:hover td { background: #cce0ff; }
 
   &__name {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 12px;
+    gap: 6px;
     font-weight: 700;
-    color: #000;
+    white-space: nowrap;
   }
 
   &__icon {
@@ -212,12 +331,23 @@ async function loginGitlab() {
     &--gitlab { color: #e24329; }
   }
 
-  &__desc {
-    font-size: 11px;
-    color: #444;
-    line-height: 1.45;
-    padding-left: 19px; // indent to align under the name text
+  &__status { color: #444; }
+
+  &__actions {
+    text-align: right;
+    white-space: nowrap;
   }
+}
+
+// ── Status badge ───────────────────────────────────────────────────
+.status-badge {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 11px;
+  font-weight: 700;
+
+  &--ok   { color: #007700; }
+  &--none { color: #808080; }
 }
 
 // ── GitLab host group box ──────────────────────────────────────────
