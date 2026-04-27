@@ -12,9 +12,18 @@ export const useReposStore = defineStore('repos', () => {
   const search = ref('')
   const selectedSource = ref(null)
   const selectedTarget = ref(null)
-  const sourceTree = ref([])
-  const sourcePath = ref('')
-  const targetPath = ref('src')
+  const sourceTree     = ref([])
+  const sourcePath     = ref('')
+  const sourceBranch   = ref('')
+  const sourceBranches = ref([])
+  const targetPath     = ref('src')
+  const targetBranch   = ref('')
+  const targetBranches = ref([])
+  const generateProjectFile = ref(false)
+  const extractRunId   = ref('')
+  const extractRunUrl  = ref('')
+  const extractStatus  = ref(null)   // null | 'running' | 'done' | 'error'
+  const extractResult  = ref(null)
 
   const filtered = computed(() =>
     search.value
@@ -91,7 +100,16 @@ export const useReposStore = defineStore('repos', () => {
     selectedTarget,
     sourceTree,
     sourcePath,
+    sourceBranch,
+    sourceBranches,
     targetPath,
+    targetBranch,
+    targetBranches,
+    generateProjectFile,
+    extractRunId,
+    extractRunUrl,
+    extractStatus,
+    extractResult,
     filtered,
     loadRepos,
     loadMore,

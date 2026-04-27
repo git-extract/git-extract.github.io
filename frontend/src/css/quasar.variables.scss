@@ -12,18 +12,21 @@
 // to match your app's branding.
 // Tip: Use the "Theme Builder" on Quasar's documentation website.
 
-// Brand colors derived from the git-extract organization logo:
-//   Navy  #1e2e4a  — browser window, git graph, wordmark
-//   Green #2ea84e  — arrow and folder icon
+// Brand palette
+//   #011826  darkest navy  — primary surfaces, title bar, sidebar
+//   #168C40  forest green  — actions, active step, success
+//   #6BBF89  sage green    — accent, hover, done steps
+//   #A7D9B8  pale green    — subtle highlights
+//   #F2F2F2  off-white     — window chrome, panel backgrounds
 
-$primary: #1e2e4a; // brand navy
-$secondary: #2ea84e; // brand green
-$accent: #4cc474; // lighter green (hover / highlight)
+$primary:   #011826; // darkest navy
+$secondary: #168C40; // forest green
+$accent:    #6BBF89; // sage green
 
-$dark: #1a2540; // deep navy for dark-mode surfaces
-$dark-page: #111b30; // near-black navy for dark-mode page background
+$dark:      #011826; // same as primary
+$dark-page: #010f18; // near-black for dark mode
 
-$positive: #28a745; // green — success (same family as brand green)
-$negative: #c10015; // red — error
-$info: #1799b5; // blue-teal — informational
-$warning: #f2c037; // amber — warning
+$positive:  #168C40; // green — success
+$negative:  #c10015; // red   — error
+$info:      #6BBF89; // sage  — informational
+$warning:   #f2c037; // amber — warning
