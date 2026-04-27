@@ -44,42 +44,37 @@
           </div>
         </div>
 
-        <table class="provider-table">
+        <table v-if="auth.isLoggedIn" class="provider-table">
           <thead>
             <tr>
               <th>Provider</th>
-              <th>Status</th>
+              <th>Identity</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="p in providers"
-              :key="p.id"
-              :class="{ 'provider-table__row--active': auth.provider === p.id }"
-            >
+            <tr v-if="auth.provider === 'github'">
               <td class="provider-table__name">
-                <q-icon :name="p.icon" class="provider-table__icon" :class="`provider-table__icon--${p.id}`" />
-                {{ p.name }}
+                <q-icon name="fab fa-github" class="provider-table__icon" />
+                GitHub
               </td>
-              <td class="provider-table__status">
-                <template v-if="auth.provider === p.id">
-                  <span class="status-badge status-badge--ok">✔</span>
-                  Signed in as
-                  <strong>{{ auth.user?.login || auth.user?.username }}</strong>
-                </template>
-                <template v-else>
-                  <span class="status-badge status-badge--none">—</span>
-                  Not signed in
-                </template>
+              <td class="provider-table__identity">
+                {{ auth.user?.login }}
               </td>
               <td class="provider-table__actions">
-                <template v-if="auth.provider === p.id">
-                  <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
-                </template>
-                <template v-else>
-                  <button class="w98-link-btn" @click="signIn(p.id)">Sign in…</button>
-                </template>
+                <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
+              </td>
+            </tr>
+            <tr v-if="auth.provider === 'gitlab'">
+              <td class="provider-table__name">
+                <q-icon name="fab fa-gitlab" class="provider-table__icon provider-table__icon--gitlab" />
+                GitLab
+              </td>
+              <td class="provider-table__identity">
+                {{ auth.user?.username }}
+              </td>
+              <td class="provider-table__actions">
+                <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
               </td>
             </tr>
           </tbody>
@@ -331,23 +326,12 @@ async function loginGitlab() {
     &--gitlab { color: #e24329; }
   }
 
-  &__status { color: #444; }
+  &__identity { color: #000; font-weight: 700; }
 
   &__actions {
     text-align: right;
     white-space: nowrap;
   }
-}
-
-// ── Status badge ───────────────────────────────────────────────────
-.status-badge {
-  display: inline-block;
-  margin-right: 4px;
-  font-size: 11px;
-  font-weight: 700;
-
-  &--ok   { color: #007700; }
-  &--none { color: #808080; }
 }
 
 // ── GitLab host group box ──────────────────────────────────────────
