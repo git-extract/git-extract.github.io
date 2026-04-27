@@ -209,7 +209,7 @@ async function loginGitlab() {
 
 // ── Provider table wrapper ─────────────────────────────────────────
 .provider-table-wrap {
-  max-width: 460px;
+  width: 100%;
 }
 
 // ── Toolbar (holds the Sign In dropdown) ──────────────────────────
