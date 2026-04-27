@@ -23,39 +23,34 @@ to rewrite and push the history.
 | Auth — GitLab | PKCE in browser, no Worker involved |
 | Git operations | GitHub Actions workflow in this repo (`extract.yml`) |
 | Secret encryption | tweetnacl (libsodium box) inside the Worker |
-| Monorepo | npm workspaces |
-
-### Monorepo layout
+### Repo layout
 
 ```
 git-extract/
 ├── AGENTS.md               ← you are here
 ├── CLAUDE.md               ← Claude Code specific extensions
 ├── .github/workflows/
-│   ├── ci.yml              ← lint + build on PR
+│   ├── lint-build.yml      ← lint + build on PR
 │   └── extract.yml         ← the git extraction runner (permanent, never touched at runtime)
-├── frontend/               ← Quasar SPA
-│   └── src/
-│       ├── boot/           ← fetch wrapper (api.js)
-│       ├── components/     ← ProviderLogin, RepoList, FolderTree, StatusPoller
-│       ├── layouts/        ← MainLayout
-│       ├── pages/          ← LoginPage, ReposPage, ExtractPage
-│       ├── router/
-│       ├── services/       ← github.js, gitlab.js
-│       └── stores/         ← auth.js, repos.js (Pinia)
-└── worker/                 ← Cloudflare Worker
-    └── src/
-        ├── routes/         ← auth.js, extract.js, status.js
-        └── services/       ← crypto.js, actionsOrchestrator.js
+├── src/                    ← Quasar SPA source
+│   ├── boot/               ← fetch wrapper (api.js)
+│   ├── components/         ← ProviderLogin, RepoList, FolderTree, StatusPoller
+│   ├── layouts/            ← MainLayout
+│   ├── pages/              ← LoginPage, ReposPage, ExtractPage
+│   ├── router/
+│   ├── services/           ← github.js, gitlab.js
+│   └── stores/             ← auth.js, repos.js (Pinia)
+├── quasar.config.js
+├── index.html
+└── package.json
 ```
 
 ### Dev commands
 
 ```bash
-npm install                 # install all workspaces from root
-npm run dev:frontend        # Quasar dev server → http://localhost:9000
-npm run dev:worker          # Wrangler dev  → http://localhost:8787
-npm run build               # build both workspaces
+npm install          # install dependencies
+npm run dev          # Quasar dev server → http://localhost:9000
+npm run build        # build the SPA
 ```
 
 ---
@@ -70,7 +65,7 @@ npm run build               # build both workspaces
 - Do not add error handling for scenarios that cannot happen in the current call context.
 - Prefer editing existing files over creating new ones.
 
-### Frontend (`frontend/`)
+### Frontend (`src/`)
 - Vue 3 Composition API only — no Options API.
 - Use Quasar components (`QBtn`, `QTree`, `QCard`, etc.) instead of plain HTML where a
   Quasar equivalent exists.
