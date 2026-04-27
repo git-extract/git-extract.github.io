@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <table v-if="auth.isLoggedIn" class="provider-table">
+        <table v-if="signedInProviders.length" class="provider-table">
           <thead>
             <tr>
               <th>Provider</th>
@@ -53,26 +53,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-if="auth.provider === 'github'">
+            <tr v-for="p in signedInProviders" :key="p.id">
               <td class="provider-table__name">
-                <q-icon name="fab fa-github" class="provider-table__icon" />
-                GitHub
+                <q-icon :name="p.icon" class="provider-table__icon" :class="`provider-table__icon--${p.id}`" />
+                {{ p.name }}
               </td>
-              <td class="provider-table__identity">
-                {{ auth.user?.login }}
-              </td>
-              <td class="provider-table__actions">
-                <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
-              </td>
-            </tr>
-            <tr v-if="auth.provider === 'gitlab'">
-              <td class="provider-table__name">
-                <q-icon name="fab fa-gitlab" class="provider-table__icon provider-table__icon--gitlab" />
-                GitLab
-              </td>
-              <td class="provider-table__identity">
-                {{ auth.user?.username }}
-              </td>
+              <td class="provider-table__identity">{{ p.identity }}</td>
               <td class="provider-table__actions">
                 <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
               </td>
@@ -129,6 +115,16 @@ const providers = [
   { id: 'github', name: 'GitHub', icon: 'fab fa-github' },
   { id: 'gitlab', name: 'GitLab', icon: 'fab fa-gitlab' },
 ]
+
+const signedInProviders = computed(() => {
+  if (!auth.isLoggedIn || !auth.provider) return []
+  const meta = providers.find(p => p.id === auth.provider)
+  if (!meta) return []
+  const identity = auth.provider === 'github'
+    ? auth.user?.login
+    : auth.user?.username
+  return [{ ...meta, identity }]
+})
 
 const showHostBox = computed(() => pendingGitlab.value || auth.provider === 'gitlab')
 
