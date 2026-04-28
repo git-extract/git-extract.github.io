@@ -22,7 +22,21 @@ const auth = useAuthStore()
 onMounted(async () => {
   if (route.path.includes('github')) {
     const token = route.query.token
-    const returnedState = route.query.state
+    const state = route.query.state
+
+    // Popup mode: send result to opener and close
+    if (window.opener) {
+      window.opener.postMessage(
+        token
+          ? { type: 'github-oauth-callback', token, state }
+          : { type: 'github-oauth-callback', error: 'no_token' },
+        window.location.origin,
+      )
+      window.close()
+      return
+    }
+
+    // Fallback: popup was blocked, running as a full-page redirect
     const storedState = sessionStorage.getItem(STATE_KEY)
     sessionStorage.removeItem(STATE_KEY)
 
@@ -31,7 +45,7 @@ onMounted(async () => {
       return
     }
 
-    if (!returnedState || returnedState !== storedState) {
+    if (!state || state !== storedState) {
       router.push('/login?error=invalid_state')
       return
     }
