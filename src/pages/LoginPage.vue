@@ -14,7 +14,7 @@
     <div class="wiz-page__body">
 
       <!-- Error banner -->
-      <div v-if="errorMessage" class="login-error">⚠ {{ errorMessage }}</div>
+      <div v-if="errorMessage || oauthError" class="login-error">⚠ {{ errorMessage || oauthError }}</div>
 
       <!-- ── Provider section ─────────────────────────────────────── -->
       <div class="provider-section">
@@ -110,9 +110,11 @@ const router     = useRouter()
 const nav        = useWizardNav()
 const auth       = useAuthStore()
 const gitlabHost = ref('gitlab.com')
-const dropdownOpen = ref(false)
-const dropdownRef  = ref(null)
+const dropdownOpen  = ref(false)
+const dropdownRef   = ref(null)
 const pendingGitlab = ref(false)
+const oauthError    = ref(null)
+const popupCleanup  = ref(null)
 
 const providers = [
   { id: 'github', name: 'GitHub', icon: 'fab fa-github' },
@@ -132,10 +134,24 @@ const signedInProviders = computed(() => {
 const showHostBox = computed(() => pendingGitlab.value || auth.provider === 'gitlab')
 
 onMounted(() => {
+  // If the worker redirected an OAuth popup back here with an error,
+  // forward it to the parent window and close the popup.
+  if (window.opener && route.query.error) {
+    window.opener.postMessage(
+      { type: 'github-oauth-callback', error: route.query.error },
+      '*',
+    )
+    window.close()
+    return
+  }
+
   updateNav()
   document.addEventListener('click', onDocClick)
 })
-onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  popupCleanup.value?.()
+})
 watch(() => auth.isLoggedIn, updateNav)
 
 function updateNav() {
@@ -155,8 +171,9 @@ function updateNav() {
 const errorMessage = computed(() => {
   if (!route.query.error) return null
   const map = {
-    no_token: 'Authentication failed: no token received.',
-    no_code:  'Authentication failed: no code received.',
+    no_token:      'Authentication failed: no token received.',
+    no_code:       'Authentication failed: no code received.',
+    invalid_state: 'Authentication failed: state mismatch — possible CSRF attack.',
   }
   return map[route.query.error] ?? `Authentication error: ${route.query.error}`
 })
@@ -182,11 +199,55 @@ async function signIn(providerId) {
 }
 
 function loginGithub() {
+  oauthError.value = null
+  const state = crypto.randomUUID()
+  sessionStorage.setItem('github_oauth_state', state)
+
   const workerUrl   = process.env.WORKER_URL
   const clientId    = process.env.GITHUB_CLIENT_ID
-  const redirectUri = `${workerUrl}/auth/github/callback`
-  const params = new URLSearchParams({ client_id: clientId, scope: 'repo user', redirect_uri: redirectUri })
-  window.location.href = `https://github.com/login/oauth/authorize?${params}`
+  const redirectUri = `${workerUrl}/callback/github`
+  const params = new URLSearchParams({ client_id: clientId, scope: 'repo user', redirect_uri: redirectUri, state })
+  const authUrl = `https://github.com/login/oauth/authorize?${params}`
+
+  const popup = window.open(authUrl, 'github-oauth', 'width=600,height=700,popup=1')
+
+  if (!popup) {
+    // popup was blocked — fall back to full-page redirect
+    window.location.href = authUrl
+    return
+  }
+
+  function onMessage(event) {
+    if (event.data?.type !== 'github-oauth-callback') return
+    cleanup()
+
+    const { token, state: returnedState, error } = event.data
+    const storedState = sessionStorage.getItem('github_oauth_state')
+    sessionStorage.removeItem('github_oauth_state')
+
+    if (error) {
+      oauthError.value = `Authentication failed: ${error.replaceAll('_', ' ')}.`
+      return
+    }
+
+    if (!token || returnedState !== storedState) {
+      oauthError.value = 'Authentication failed: invalid response from GitHub.'
+      return
+    }
+
+    auth.loginWithToken('github', token)
+  }
+
+  const timer = setInterval(() => { if (popup.closed) cleanup() }, 500)
+
+  function cleanup() {
+    clearInterval(timer)
+    window.removeEventListener('message', onMessage)
+    popupCleanup.value = null
+  }
+
+  popupCleanup.value = cleanup
+  window.addEventListener('message', onMessage)
 }
 
 async function loginGitlab() {
