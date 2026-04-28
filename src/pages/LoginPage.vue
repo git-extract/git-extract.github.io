@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <table v-if="signedInProviders.length" class="provider-table">
+        <table class="provider-table">
           <thead>
             <tr>
               <th>Provider</th>
