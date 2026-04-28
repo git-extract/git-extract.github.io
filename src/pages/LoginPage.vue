@@ -16,13 +16,14 @@
       <!-- Error banner -->
       <div v-if="errorMessage" class="login-error">⚠ {{ errorMessage }}</div>
 
-      <!-- ── Provider table ──────────────────────────────────────── -->
-      <div class="provider-table-wrap">
-        <div class="provider-table-toolbar">
-          <!-- top-right Sign In dropdown -->
+      <!-- ── Provider section ─────────────────────────────────────── -->
+      <div class="provider-section">
+
+        <!-- toolbar -->
+        <div class="provider-toolbar">
           <div class="signin-dropdown" ref="dropdownRef">
             <button
-              class="w98-btn signin-dropdown__btn"
+              class="w98-btn"
               @click="toggleDropdown"
               aria-haspopup="listbox"
               :aria-expanded="dropdownOpen"
@@ -44,30 +45,32 @@
           </div>
         </div>
 
-        <table class="provider-table">
-          <thead>
-            <tr>
-              <th>Provider</th>
-              <th>Identity</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="p in signedInProviders" :key="p.id">
-              <td class="provider-table__name">
-                <q-icon :name="p.icon" class="provider-table__icon" :class="`provider-table__icon--${p.id}`" />
-                {{ p.name }}
-              </td>
-              <td class="provider-table__identity">{{ p.identity }}</td>
-              <td class="provider-table__actions">
-                <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Win98 Details-view listview -->
+        <div class="provider-listview">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-provider">Provider</th>
+                <th class="col-identity">Identity</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in signedInProviders" :key="p.id">
+                <td class="col-provider">
+                  <q-icon :name="p.icon" class="row-icon" :class="`row-icon--${p.id}`" />
+                  {{ p.name }}
+                </td>
+                <td class="col-identity">{{ p.identity }}</td>
+                <td class="col-actions">
+                  <button class="w98-link-btn" @click="auth.logout()">Sign out</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-        <!-- GitLab host input — shown below the table when gitlab is the active provider
-             or when a gitlab sign-in is pending -->
+        <!-- GitLab host input -->
         <transition name="slide">
           <div v-if="showHostBox" class="gitlab-host-box">
             <div class="w98-group-box">
@@ -192,36 +195,43 @@ async function loginGitlab() {
 </script>
 
 <style lang="scss" scoped>
+// ── Make body a flex column so children can fill remaining height ──
+.wiz-page__body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 // ── Error banner ───────────────────────────────────────────────────
 .login-error {
+  flex-shrink: 0;
   font-size: 11px;
   padding: 5px 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   border: 2px solid #c10015;
   background: #ffeeee;
   color: #c10015;
-  max-width: 460px;
 }
 
-// ── Provider table wrapper ─────────────────────────────────────────
-.provider-table-wrap {
-  width: 100%;
+// ── Provider section — fills remaining body height ─────────────────
+.provider-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-// ── Toolbar (holds the Sign In dropdown) ──────────────────────────
-.provider-table-toolbar {
+// ── Toolbar ────────────────────────────────────────────────────────
+.provider-toolbar {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 // ── Sign In dropdown ──────────────────────────────────────────────
 .signin-dropdown {
   position: relative;
-
-  &__btn {
-    min-width: 80px;
-  }
 
   &__menu {
     position: absolute;
@@ -253,92 +263,103 @@ async function loginGitlab() {
     &:hover:not(:disabled) {
       background: #000080;
       color: #fff;
-
-      .signin-dropdown__icon { color: #fff; }
+      .signin-dropdown__icon { color: #fff !important; }
     }
 
-    &:disabled {
-      color: #808080;
-      cursor: default;
-    }
+    &:disabled { color: #808080; cursor: default; }
   }
 
   &__icon {
     font-size: 13px !important;
     color: #333;
-
     &--gitlab { color: #e24329; }
   }
 }
 
-// ── Provider table ─────────────────────────────────────────────────
-.provider-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+// ── Win98 Details-view listview ────────────────────────────────────
+.provider-listview {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  // Sunken inset border — classic Win98 ListBox / ListView
   border: 2px solid;
   border-color: #808080 #ffffff #ffffff #808080;
-  box-shadow: inset 1px 1px 0 #000;
+  box-shadow:
+    inset 1px 1px 0 #0a0a0a,
+    inset -1px -1px 0 #e8e8e8;
   background: #fff;
-  margin-bottom: 12px;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
 
   thead tr {
-    background: #000080;
-    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
 
   th {
-    padding: 3px 8px;
+    background: #d4d0c8;
+    // Raised Win98 column-header 3D look
+    box-shadow: inset -1px -1px #808080, inset 1px 1px #ffffff;
+    padding: 2px 6px;
+    font-size: 11px;
     font-weight: 700;
     text-align: left;
-    font-size: 11px;
-    letter-spacing: 0.02em;
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   td {
-    padding: 5px 8px;
-    border-top: 1px solid #e0e0e0;
-    color: #000;
+    padding: 2px 6px;
+    font-size: 12px;
     vertical-align: middle;
-  }
-
-  tbody tr:hover { background: #f0f0f0; }
-
-  &__row--active td { background: #ddeeff; }
-  &__row--active:hover td { background: #cce0ff; }
-
-  &__name {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+    border-bottom: 1px solid #f0f0f0;
   }
 
-  &__icon {
-    font-size: 14px !important;
-    color: #333;
+  tbody tr:hover td {
+    background: #000080;
+    color: #fff;
 
-    &--gitlab { color: #e24329; }
-  }
-
-  &__identity { color: #000; font-weight: 700; }
-
-  &__actions {
-    text-align: right;
-    white-space: nowrap;
+    .row-icon { color: #fff !important; }
+    .w98-link-btn { color: #fff; }
   }
 }
 
+// ── Column widths ──────────────────────────────────────────────────
+.col-provider  { width: 140px; }
+.col-identity  { width: auto; }
+.col-actions   { width: 70px; text-align: right; }
+
+// ── Row icon ──────────────────────────────────────────────────────
+.row-icon {
+  font-size: 13px !important;
+  margin-right: 5px;
+  vertical-align: middle;
+  color: #333;
+  &--gitlab { color: #e24329; }
+}
+
 // ── GitLab host group box ──────────────────────────────────────────
-.gitlab-host-box { max-width: 380px; }
+.gitlab-host-box {
+  flex-shrink: 0;
+  margin-top: 8px;
+}
 
 .w98-group-box {
   border: 1px solid #808080;
   box-shadow: 1px 1px 0 #fff;
   padding: 0 10px 10px;
   position: relative;
-  margin-top: 2px;
 
   &__label {
     position: absolute;
