@@ -155,8 +155,9 @@ function updateNav() {
 const errorMessage = computed(() => {
   if (!route.query.error) return null
   const map = {
-    no_token: 'Authentication failed: no token received.',
-    no_code:  'Authentication failed: no code received.',
+    no_token:      'Authentication failed: no token received.',
+    no_code:       'Authentication failed: no code received.',
+    invalid_state: 'Authentication failed: state mismatch — possible CSRF attack.',
   }
   return map[route.query.error] ?? `Authentication error: ${route.query.error}`
 })
@@ -182,10 +183,12 @@ async function signIn(providerId) {
 }
 
 function loginGithub() {
+  const state = crypto.randomUUID()
+  sessionStorage.setItem('github_oauth_state', state)
   const workerUrl   = process.env.WORKER_URL
   const clientId    = process.env.GITHUB_CLIENT_ID
   const redirectUri = `${workerUrl}/auth/github/callback`
-  const params = new URLSearchParams({ client_id: clientId, scope: 'repo user', redirect_uri: redirectUri })
+  const params = new URLSearchParams({ client_id: clientId, scope: 'repo user', redirect_uri: redirectUri, state })
   window.location.href = `https://github.com/login/oauth/authorize?${params}`
 }
 
