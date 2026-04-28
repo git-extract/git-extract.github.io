@@ -194,7 +194,7 @@ function loginGithub() {
 
   const workerUrl   = process.env.WORKER_URL
   const clientId    = process.env.GITHUB_CLIENT_ID
-  const redirectUri = `${workerUrl}/auth/github/callback`
+  const redirectUri = `${workerUrl}/callback/github`
   const params = new URLSearchParams({ client_id: clientId, scope: 'repo user', redirect_uri: redirectUri, state })
   const authUrl = `https://github.com/login/oauth/authorize?${params}`
 
