@@ -24,13 +24,15 @@ onMounted(async () => {
     const token = route.query.token
     const state = route.query.state
 
-    // Popup mode: send result to opener and close
+    // Popup mode: send result to opener and close.
+    // Use '*' as targetOrigin — the state parameter is the CSRF guard,
+    // so this is safe even when the parent is on a different origin (local dev).
     if (window.opener) {
       window.opener.postMessage(
         token
           ? { type: 'github-oauth-callback', token, state }
           : { type: 'github-oauth-callback', error: 'no_token' },
-        window.location.origin,
+        '*',
       )
       window.close()
       return

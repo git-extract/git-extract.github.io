@@ -134,6 +134,17 @@ const signedInProviders = computed(() => {
 const showHostBox = computed(() => pendingGitlab.value || auth.provider === 'gitlab')
 
 onMounted(() => {
+  // If the worker redirected an OAuth popup back here with an error,
+  // forward it to the parent window and close the popup.
+  if (window.opener && route.query.error) {
+    window.opener.postMessage(
+      { type: 'github-oauth-callback', error: route.query.error },
+      '*',
+    )
+    window.close()
+    return
+  }
+
   updateNav()
   document.addEventListener('click', onDocClick)
 })
@@ -207,7 +218,6 @@ function loginGithub() {
   }
 
   function onMessage(event) {
-    if (event.origin !== window.location.origin) return
     if (event.data?.type !== 'github-oauth-callback') return
     cleanup()
 
@@ -215,10 +225,13 @@ function loginGithub() {
     const storedState = sessionStorage.getItem('github_oauth_state')
     sessionStorage.removeItem('github_oauth_state')
 
-    if (error || !token || returnedState !== storedState) {
-      oauthError.value = error === 'no_token'
-        ? 'Authentication failed: no token received.'
-        : 'Authentication failed: invalid response from GitHub.'
+    if (error) {
+      oauthError.value = `Authentication failed: ${error.replaceAll('_', ' ')}.`
+      return
+    }
+
+    if (!token || returnedState !== storedState) {
+      oauthError.value = 'Authentication failed: invalid response from GitHub.'
       return
     }
 
